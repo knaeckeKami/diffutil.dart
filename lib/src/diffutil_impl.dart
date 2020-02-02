@@ -1,6 +1,9 @@
 import 'dart:math' as math;
 import 'dart:typed_data';
 
+import 'package:diffutil.dart/src/diff_delegate.dart';
+
+
 ///
 ///Snakes represent a match between two lists. It is optionally prefixed or postfixed with an
 ///add or remove operation. See the Myers' paper for details.
@@ -124,7 +127,7 @@ class DiffResult {
   ///@param newItemStatuses An int[] that can be re-purposed to keep metadata
   ///@param detectMoves True if this DiffResult will try to detect moved items
   ///
-  DiffResult(DiffDelegate callback, List<_Snake> snakes,
+  DiffResult._(DiffDelegate callback, List<_Snake> snakes,
       List<int> oldItemStatuses, List<int> newItemStatuses, bool detectMoves)
       : mSnakes = snakes,
         mOldItemStatuses = oldItemStatuses,
@@ -139,15 +142,15 @@ class DiffResult {
     if (mNewItemStatuses.isNotEmpty) {
       mNewItemStatuses.fillRange(0, mNewItemStatuses.length - 1, 0);
     }
-    addRootSnake();
-    findMatchingItems();
+    _addRootSnake();
+    _findMatchingItems();
   }
 
   ///
   ///We always add a Snake to 0/0 so that we can run loops from end to beginning and be done
   ///when we run out of snakes.
   ///
-  void addRootSnake() {
+  void _addRootSnake() {
     final _Snake firstSnake = mSnakes.isEmpty ? null : mSnakes.first;
     if (firstSnake == null || firstSnake.x != 0 || firstSnake.y != 0) {
       final root = _Snake(x: 0, y: 0, removal: false, size: 0, reverse: false);
@@ -166,7 +169,7 @@ class DiffResult {
   ///the statuses maps. DiffResult uses this pre-calculated information while dispatching
   ///the updates (which is probably being called on the main thread).
   ///
-  void findMatchingItems() {
+  void _findMatchingItems() {
     int posOld = mOldListSize;
     int posNew = mNewListSize;
     // traverse the matrix from right bottom to 0,0.
@@ -177,13 +180,13 @@ class DiffResult {
       if (mDetectMoves) {
         while (posOld > endX) {
           // this is a removal. Check remaining snakes to see if this was added before
-          findAddition(posOld, posNew, i);
+          _findAddition(posOld, posNew, i);
           posOld--;
         }
         while (posNew > endY) {
           // this is an addition. Check remaining snakes to see if this was removed
           // before
-          findRemoval(posOld, posNew, i);
+          _findRemoval(posOld, posNew, i);
           posNew--;
         }
       }
@@ -202,18 +205,18 @@ class DiffResult {
     }
   }
 
-  void findAddition(int x, int y, int snakeIndex) {
+  void _findAddition(int x, int y, int snakeIndex) {
     if (mOldItemStatuses[x - 1] != 0) {
       return; // already set by a latter item
     }
-    findMatchingItem(x, y, snakeIndex, false);
+    _findMatchingItem(x, y, snakeIndex, false);
   }
 
-  void findRemoval(int x, int y, int snakeIndex) {
+  void _findRemoval(int x, int y, int snakeIndex) {
     if (mNewItemStatuses[y - 1] != 0) {
       return; // already set by a latter item
     }
-    findMatchingItem(x, y, snakeIndex, true);
+    _findMatchingItem(x, y, snakeIndex, true);
   }
 
   ///
@@ -228,7 +231,7 @@ class DiffResult {
 
   ///@return True if such item is found.
   ///
-  bool findMatchingItem(
+  bool _findMatchingItem(
       final int x, final int y, final int snakeIndex, final bool removal) {
     int myItemPos;
     int curX;
@@ -311,11 +314,11 @@ class DiffResult {
       final int endX = snake.x + snakeSize;
       final int endY = snake.y + snakeSize;
       if (endX < posOld) {
-        dispatchRemovals(
+        _dispatchRemovals(
             postponedUpdates, batchingCallback, endX, posOld - endX, endX);
       }
       if (endY < posNew) {
-        dispatchAdditions(
+        _dispatchAdditions(
             postponedUpdates, batchingCallback, endX, posNew - endY, endY);
       }
       for (int i = snakeSize - 1; i >= 0; i--) {
@@ -330,7 +333,7 @@ class DiffResult {
     batchingCallback.dispatchLastEvent();
   }
 
-  static _PostponedUpdate removePostponedUpdate(
+  static _PostponedUpdate _removePostponedUpdate(
       List<_PostponedUpdate> updates, int pos, bool removal) {
     for (int i = updates.length - 1; i >= 0; i--) {
       final _PostponedUpdate update = updates[i];
@@ -346,7 +349,7 @@ class DiffResult {
     return null;
   }
 
-  void dispatchAdditions(
+  void _dispatchAdditions(
       List<_PostponedUpdate> postponedUpdates,
       ListUpdateCallback updateCallback,
       int start,
@@ -369,7 +372,7 @@ class DiffResult {
         case FLAG_MOVED_NOT_CHANGED:
           final int pos = mNewItemStatuses[globalIndex + i] >> FLAG_OFFSET;
           final _PostponedUpdate update =
-              removePostponedUpdate(postponedUpdates, pos, true);
+              _removePostponedUpdate(postponedUpdates, pos, true);
           // the item was moved from that position
           //noinspection ConstantConditions
           updateCallback.onMoved(update.currentPos, start);
@@ -391,7 +394,7 @@ class DiffResult {
     }
   }
 
-  void dispatchRemovals(
+  void _dispatchRemovals(
       List<_PostponedUpdate> postponedUpdates,
       ListUpdateCallback updateCallback,
       int start,
@@ -414,7 +417,7 @@ class DiffResult {
         case FLAG_MOVED_NOT_CHANGED:
           final int pos = mOldItemStatuses[globalIndex + i] >> FLAG_OFFSET;
           final _PostponedUpdate update =
-              removePostponedUpdate(postponedUpdates, pos, false);
+              _removePostponedUpdate(postponedUpdates, pos, false);
           // the item was moved to that position. we do -1 because this is a move not
           // add and removing current item offsets the target move by 1
           //noinspection ConstantConditions
@@ -438,76 +441,13 @@ class DiffResult {
     }
   }
 
-  List<_Snake> getSnakes() {
-    return mSnakes;
-  }
-
   @override
   String toString() {
     return 'DiffResult{mSnakes: $mSnakes}, ';
   }
 }
 
-abstract class DiffDelegate {
-  ///
-  ///Returns the size of the old list.
-  ///
 
-  ///@return The size of the old list.
-  ///
-  int getOldListSize();
-
-  ///
-  ///Returns the size of the new list.
-  ///
-  ///@return The size of the new list.
-  ///
-  int getNewListSize();
-
-  ///
-  ///Called by the DiffUtil to decide whether two object represent the same Item.
-  ///<p>
-  ///For example, if your items have unique ids, this method should check their id equality.
-  ///
-  ///@param oldItemPosition The position of the item in the old list
-  ///@param newItemPosition The position of the item in the new list
-  ///@return True if the two items represent the same object or false if they are different.
-  ///
-  bool areItemsTheSame(int oldItemPosition, int newItemPosition);
-
-  ///
-  ///Called by the DiffUtil when it wants to check whether two items have the same data.
-  ///DiffUtil uses this information to detect if the contents of an item has changed.
-  ///<p>
-  ///DiffUtil uses this method to check equality instead of ==
-  ///so that you can change its behavior depending on your UI.
-  ///This method is called only if areItemsTheSame returns
-  ///true for these items.
-  ///
-  ///@param oldItemPosition The position of the item in the old list
-  ///@param newItemPosition The position of the item in the new list which replaces the
-  ///oldItem
-  ///@return True if the contents of the items are the same or false if they are different.
-  ///
-  bool areContentsTheSame(int oldItemPosition, int newItemPosition);
-
-  ///
-  ///When areItemsTheSame(int, int) returns true for two items and
-  ///areContentsTheSame(int, int) returns false for them, DiffUtil
-  ///calls this method to get a payload about the change.
-  ///<p>
-  ///Default implementation returns {@code null}.
-  ///
-  ///@param oldItemPosition The position of the item in the old list
-  ///@param newItemPosition The position of the item in the new list
-  ///
-  ///@return A payload object that represents the change between the two items.
-  ///
-
-  Object getChangePayload(int oldItemPosition, int newItemPosition) {
-    return null;
-  }
-}
 
 class _PostponedUpdate {
   final int posInOwnerList;
@@ -734,7 +674,7 @@ DiffResult calculateDiff(DiffDelegate cb, {bool detectMoves = true}) {
   }
   // sort snakes
   snakes.sort(_snakeComparator);
-  return DiffResult(cb, snakes, forward, backward, detectMoves);
+  return DiffResult._(cb, snakes, forward, backward, detectMoves);
 }
 
 _Snake _diffPartial(DiffDelegate cb, int startOld, int endOld, int startNew,
@@ -830,38 +770,6 @@ _Snake _diffPartial(DiffDelegate cb, int startOld, int endOld, int startNew,
       " the optimal path. Please make sure your data is not changing during the" +
       " diff calculation.");
 }
-
-class ListDiffDelegate<T> implements DiffDelegate {
-  final List<T> oldList;
-  final List<T> newList;
-  final bool Function(T, T) equalityChecker;
-
-  ListDiffDelegate(this.oldList, this.newList,
-      [bool Function(T, T) equalityChecker])
-      : equalityChecker = equalityChecker ?? ((a, b) => a == b);
-
-  @override
-  bool areContentsTheSame(int oldItemPosition, int newItemPosition) {
-    return true;
-  }
-
-  @override
-  bool areItemsTheSame(int oldItemPosition, int newItemPosition) {
-    return equalityChecker(oldList[oldItemPosition], newList[newItemPosition]);
-  }
-
-  @override
-  Object getChangePayload(int oldItemPosition, int newItemPosition) {
-    return null;
-  }
-
-  @override
-  int getNewListSize() => newList.length;
-
-  @override
-  int getOldListSize() => oldList.length;
-}
-
 
 /// calculate the difference between the two given lists.
 ///

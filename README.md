@@ -26,7 +26,9 @@ If you don't want to use plain old Dart lists (for example if you're using built
 to standard lists, you can use
 the `calculateDiff` function and implement your own `DiffDelegate` easily.
 
+### Using the result:
 
+Implement `ListUpdateCallback` and call `diffResult.dispatchUpdatesTo(myCallback);`
 
 ## Performance metrics:
 
