@@ -1,3 +1,11 @@
+## 0.0.7
+
+Fix lint errors
+
+## 0.0.6
+
+Fix missing exports
+
 ## 0.0.5
 
 Add support for custom list-like types
