@@ -3,7 +3,6 @@ import 'dart:typed_data';
 
 import 'package:diffutil_dart/src/diff_delegate.dart';
 
-
 ///
 ///Snakes represent a match between two lists. It is optionally prefixed or postfixed with an
 ///add or remove operation. See the Myers' paper for details.
@@ -447,8 +446,6 @@ class DiffResult {
   }
 }
 
-
-
 class _PostponedUpdate {
   final int posInOwnerList;
   int currentPos;
@@ -778,7 +775,7 @@ _Snake _diffPartial(DiffDelegate cb, int startOld, int endOld, int startNew,
 /// @param detectMoves wheter move detection should be enabled
 /// @param equalityChecker use this if you don't want to use the equality as defined by the == operator
 DiffResult calculateListDiff<T>(List<T> oldList, List<T> newList,
-    {bool detectMoves = true, bool Function(T,T) equalityChecker}) {
+    {bool detectMoves = true, bool Function(T, T) equalityChecker}) {
   return calculateDiff(ListDiffDelegate(oldList, newList, equalityChecker),
       detectMoves: detectMoves);
 }

@@ -1,4 +1,3 @@
-
 abstract class DiffDelegate {
   ///
   ///Returns the size of the old list.
@@ -59,7 +58,6 @@ abstract class DiffDelegate {
     return null;
   }
 }
-
 
 class ListDiffDelegate<T> implements DiffDelegate {
   final List<T> oldList;
