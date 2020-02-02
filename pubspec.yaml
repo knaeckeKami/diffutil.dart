@@ -1,6 +1,6 @@
 name: diffutil_dart
 description: Calculate the difference between two lists. Used for implicitly animating Flutter lists without having to maintain a StatefulWidget.
-version: 0.0.3
+version: 0.0.5
 author: Martin Kamleithner
 homepage: https://github.com/knaeckeKami/diffutil.dart
 

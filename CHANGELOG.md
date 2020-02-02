@@ -1,3 +1,11 @@
+## 0.0.5
+
+Add support for custom list-like types
+
+## 0.0.4
+
+Add example
+
 ## 0.0.3
 
 Update Package description

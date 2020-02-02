@@ -779,3 +779,19 @@ DiffResult calculateListDiff<T>(List<T> oldList, List<T> newList,
   return calculateDiff(ListDiffDelegate(oldList, newList, equalityChecker),
       detectMoves: detectMoves);
 }
+
+DiffResult calculateCustomListDiff<T, L>(L oldList, L newList,
+    {bool detectMoves = true,
+    bool Function(T, T) equalityChecker,
+    T Function(L, int) getByIndex,
+    int Function(L) getLength}) {
+  return calculateDiff(
+      CustomListDiffDelegate<T, L>(
+        oldList: oldList,
+        newList: newList,
+        equalityChecker: equalityChecker,
+        getLength: getLength,
+        getByIndex: getByIndex,
+      ),
+      detectMoves: detectMoves);
+}

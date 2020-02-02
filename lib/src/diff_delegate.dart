@@ -89,3 +89,50 @@ class ListDiffDelegate<T> implements DiffDelegate {
   @override
   int getOldListSize() => oldList.length;
 }
+
+
+/// can be used for custom list-like types, for example from built_collection or kt.dart
+class CustomListDiffDelegate<T, L> implements DiffDelegate {
+  final L oldList;
+  final L newList;
+
+  final bool Function(T, T) equalityChecker;
+
+  final T Function(L, int) getByIndex;
+
+  final int Function(L) getLength;
+
+  CustomListDiffDelegate(
+      {this.oldList,
+      this.newList,
+      this.getByIndex,
+      this.getLength,
+      bool Function(T, T) equalityChecker})
+      : equalityChecker = equalityChecker ?? ((a, b) => a == b);
+
+  @override
+  bool areContentsTheSame(int oldItemPosition, int newItemPosition) {
+    return true;
+  }
+
+  @override
+  bool areItemsTheSame(int oldItemPosition, int newItemPosition) {
+    return equalityChecker(getByIndex(oldList, oldItemPosition),
+        getByIndex(newList, newItemPosition));
+  }
+
+  @override
+  Object getChangePayload(int oldItemPosition, int newItemPosition) {
+    return null;
+  }
+
+  @override
+  int getNewListSize() {
+    return getLength(newList);
+  }
+
+  @override
+  int getOldListSize() {
+    return getLength(oldList);
+  }
+}

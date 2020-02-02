@@ -1,5 +1,3 @@
-
-
 import 'package:diffutil_dart/diffutil.dart' as diffutil;
 
 void main() {
