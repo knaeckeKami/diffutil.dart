@@ -1,4 +1,4 @@
-name: diffutil.dart
+name: diffutil_dart
 description: Calculate the difference between two lists.
 version: 0.0.1
 author: Martin Kamleithner

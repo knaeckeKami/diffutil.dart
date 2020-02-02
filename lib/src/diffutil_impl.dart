@@ -1,7 +1,7 @@
 import 'dart:math' as math;
 import 'dart:typed_data';
 
-import 'package:diffutil.dart/src/diff_delegate.dart';
+import 'package:diffutil_dart/src/diff_delegate.dart';
 
 
 ///
