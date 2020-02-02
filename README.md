@@ -1,4 +1,4 @@
-# diffutil
+# diffutil.dart
 
 Calculate the difference between two lists.
 

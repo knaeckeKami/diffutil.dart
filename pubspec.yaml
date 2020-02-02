@@ -1,8 +1,8 @@
-name: diffutil
+name: diffutil.dart
 description: Calculate the difference between two lists.
 version: 0.0.1
-author:
-homepage:
+author: Martin Kamleithner
+homepage: https://github.com/knaeckeKami/diffutil.dart
 
 environment:
   sdk: ">=2.6.0 <3.0.0"
