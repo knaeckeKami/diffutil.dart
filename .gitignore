@@ -5,6 +5,7 @@ build/
 pubspec.lock
 
 test/.test_coverage.dart
+coverage
 
 # Miscellaneous
 *.class

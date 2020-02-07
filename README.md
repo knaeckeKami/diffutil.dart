@@ -1,6 +1,8 @@
 # diffutil.dart
 
 [![Pub Package](https://img.shields.io/pub/v/diffutil_dart.svg)](https://pub.dartlang.org/packages/diffutil_dart)
+![Coverage](https://raw.githubusercontent.com/knaeckeKami/diffutil.dart/master/coverage_badge.svg?sanitize=true)
+
 
 Calculate the difference between two lists.
 
