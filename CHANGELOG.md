@@ -1,3 +1,9 @@
+## 0.1.0
+
+- Fix bug in move detection
+- Tighten up privacy of instance variables that were unnecessarily public
+- add tests
+
 ## 0.0.7
 
 Fix lint errors
