@@ -369,7 +369,7 @@ class DiffResult {
     for (int i = updates.length - 1; i >= 0; i--) {
       final _PostponedUpdate update = updates[i];
       if (update.posInOwnerList == pos && update.removal == removal) {
-        updates.remove(i);
+        updates.removeAt(i);
         for (int j = i; j < updates.length; j++) {
           // offset other ops since they swapped positions
           updates[j].currentPos += removal ? 1 : -1;
