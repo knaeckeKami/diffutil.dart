@@ -103,21 +103,21 @@ class DiffResult {
   static const int FLAG_MASK = (1 << FLAG_OFFSET) - 1;
 
   // The Myers' snakes. At this point, we only care about their diagonal sections.
-  final List<_Snake> mSnakes;
+  final List<_Snake> _mSnakes;
 
   // The list to keep oldItemStatuses. As we traverse old items, we assign flags to them
   // which also includes whether they were a real removal or a move (and its new index).
-  final List<int> mOldItemStatuses;
+  final List<int> _mOldItemStatuses;
 
   // The list to keep newItemStatuses. As we traverse new items, we assign flags to them
   // which also includes whether they were a real addition or a move(and its old index).
-  final List<int> mNewItemStatuses;
+  final List<int> _mNewItemStatuses;
 
   // The callback that was given to calcualte diff method.
-  final DiffDelegate mCallback;
-  final int mOldListSize;
-  final int mNewListSize;
-  final bool mDetectMoves;
+  final DiffDelegate _mCallback;
+  final int _mOldListSize;
+  final int _mNewListSize;
+  final bool _mDetectMoves;
 
   ///
   ///@param callback The callback that was used to calculate the diff
@@ -128,18 +128,18 @@ class DiffResult {
   ///
   DiffResult._(DiffDelegate callback, List<_Snake> snakes,
       List<int> oldItemStatuses, List<int> newItemStatuses, bool detectMoves)
-      : mSnakes = snakes,
-        mOldItemStatuses = oldItemStatuses,
-        mNewItemStatuses = newItemStatuses,
-        mCallback = callback,
-        mOldListSize = callback.getOldListSize(),
-        mNewListSize = callback.getNewListSize(),
-        mDetectMoves = detectMoves {
-    if (mOldItemStatuses.isNotEmpty) {
-      mOldItemStatuses.fillRange(0, mOldItemStatuses.length - 1, 0);
+      : _mSnakes = snakes,
+        _mOldItemStatuses = oldItemStatuses,
+        _mNewItemStatuses = newItemStatuses,
+        _mCallback = callback,
+        _mOldListSize = callback.getOldListSize(),
+        _mNewListSize = callback.getNewListSize(),
+        _mDetectMoves = detectMoves {
+    if (_mOldItemStatuses.isNotEmpty) {
+      _mOldItemStatuses.fillRange(0, _mOldItemStatuses.length - 1, 0);
     }
-    if (mNewItemStatuses.isNotEmpty) {
-      mNewItemStatuses.fillRange(0, mNewItemStatuses.length - 1, 0);
+    if (_mNewItemStatuses.isNotEmpty) {
+      _mNewItemStatuses.fillRange(0, _mNewItemStatuses.length - 1, 0);
     }
     _addRootSnake();
     _findMatchingItems();
@@ -150,10 +150,10 @@ class DiffResult {
   ///when we run out of snakes.
   ///
   void _addRootSnake() {
-    final _Snake firstSnake = mSnakes.isEmpty ? null : mSnakes.first;
+    final _Snake firstSnake = _mSnakes.isEmpty ? null : _mSnakes.first;
     if (firstSnake == null || firstSnake.x != 0 || firstSnake.y != 0) {
       final root = _Snake(x: 0, y: 0, removal: false, size: 0, reverse: false);
-      mSnakes.insert(0, root);
+      _mSnakes.insert(0, root);
     }
   }
 
@@ -169,14 +169,14 @@ class DiffResult {
   ///the updates (which is probably being called on the main thread).
   ///
   void _findMatchingItems() {
-    int posOld = mOldListSize;
-    int posNew = mNewListSize;
+    int posOld = _mOldListSize;
+    int posNew = _mNewListSize;
     // traverse the matrix from right bottom to 0,0.
-    for (int i = mSnakes.length - 1; i >= 0; i--) {
-      final _Snake snake = mSnakes[i];
+    for (int i = _mSnakes.length - 1; i >= 0; i--) {
+      final _Snake snake = _mSnakes[i];
       final int endX = snake.x + snake.size;
       final int endY = snake.y + snake.size;
-      if (mDetectMoves) {
+      if (_mDetectMoves) {
         while (posOld > endX) {
           // this is a removal. Check remaining snakes to see if this was added before
           _findAddition(posOld, posNew, i);
@@ -194,10 +194,10 @@ class DiffResult {
         final int oldItemPos = snake.x + j;
         final int newItemPos = snake.y + j;
         final bool theSame =
-            mCallback.areContentsTheSame(oldItemPos, newItemPos);
+            _mCallback.areContentsTheSame(oldItemPos, newItemPos);
         final int changeFlag = theSame ? FLAG_NOT_CHANGED : FLAG_CHANGED;
-        mOldItemStatuses[oldItemPos] = (newItemPos << FLAG_OFFSET) | changeFlag;
-        mNewItemStatuses[newItemPos] = (oldItemPos << FLAG_OFFSET) | changeFlag;
+        _mOldItemStatuses[oldItemPos] = (newItemPos << FLAG_OFFSET) | changeFlag;
+        _mNewItemStatuses[newItemPos] = (oldItemPos << FLAG_OFFSET) | changeFlag;
       }
       posOld = snake.x;
       posNew = snake.y;
@@ -205,14 +205,14 @@ class DiffResult {
   }
 
   void _findAddition(int x, int y, int snakeIndex) {
-    if (mOldItemStatuses[x - 1] != 0) {
+    if (_mOldItemStatuses[x - 1] != 0) {
       return; // already set by a latter item
     }
     _findMatchingItem(x, y, snakeIndex, false);
   }
 
   void _findRemoval(int x, int y, int snakeIndex) {
-    if (mNewItemStatuses[y - 1] != 0) {
+    if (_mNewItemStatuses[y - 1] != 0) {
       return; // already set by a latter item
     }
     _findMatchingItem(x, y, snakeIndex, true);
@@ -245,32 +245,32 @@ class DiffResult {
       curY = y;
     }
     for (int i = snakeIndex; i >= 0; i--) {
-      final _Snake snake = mSnakes[i];
+      final _Snake snake = _mSnakes[i];
       final int endX = snake.x + snake.size;
       final int endY = snake.y + snake.size;
       if (removal) {
         // check removals for a match
         for (int pos = curX - 1; pos >= endX; pos--) {
-          if (mCallback.areItemsTheSame(pos, myItemPos)) {
+          if (_mCallback.areItemsTheSame(pos, myItemPos)) {
             // found!
-            final bool theSame = mCallback.areContentsTheSame(pos, myItemPos);
+            final bool theSame = _mCallback.areContentsTheSame(pos, myItemPos);
             final int changeFlag =
                 theSame ? FLAG_MOVED_NOT_CHANGED : FLAG_MOVED_CHANGED;
-            mNewItemStatuses[myItemPos] = (pos << FLAG_OFFSET) | FLAG_IGNORE;
-            mOldItemStatuses[pos] = (myItemPos << FLAG_OFFSET) | changeFlag;
+            _mNewItemStatuses[myItemPos] = (pos << FLAG_OFFSET) | FLAG_IGNORE;
+            _mOldItemStatuses[pos] = (myItemPos << FLAG_OFFSET) | changeFlag;
             return true;
           }
         }
       } else {
         // check for additions for a match
         for (int pos = curY - 1; pos >= endY; pos--) {
-          if (mCallback.areItemsTheSame(myItemPos, pos)) {
+          if (_mCallback.areItemsTheSame(myItemPos, pos)) {
             // found
-            final bool theSame = mCallback.areContentsTheSame(myItemPos, pos);
+            final bool theSame = _mCallback.areContentsTheSame(myItemPos, pos);
             final int changeFlag =
                 theSame ? FLAG_MOVED_NOT_CHANGED : FLAG_MOVED_CHANGED;
-            mOldItemStatuses[x - 1] = (pos << FLAG_OFFSET) | FLAG_IGNORE;
-            mNewItemStatuses[pos] = ((x - 1) << FLAG_OFFSET) | changeFlag;
+            _mOldItemStatuses[x - 1] = (pos << FLAG_OFFSET) | FLAG_IGNORE;
+            _mNewItemStatuses[pos] = ((x - 1) << FLAG_OFFSET) | changeFlag;
             return true;
           }
         }
@@ -305,10 +305,10 @@ class DiffResult {
     // These are add/remove ops that are converted to moves. We track their positions until
     // their respective update operations are processed.
     final List<_PostponedUpdate> postponedUpdates = [];
-    int posOld = mOldListSize;
-    int posNew = mNewListSize;
-    for (int snakeIndex = mSnakes.length - 1; snakeIndex >= 0; snakeIndex--) {
-      final _Snake snake = mSnakes[snakeIndex];
+    int posOld = _mOldListSize;
+    int posNew = _mNewListSize;
+    for (int snakeIndex = _mSnakes.length - 1; snakeIndex >= 0; snakeIndex--) {
+      final _Snake snake = _mSnakes[snakeIndex];
       final int snakeSize = snake.size;
       final int endX = snake.x + snakeSize;
       final int endY = snake.y + snakeSize;
@@ -321,9 +321,9 @@ class DiffResult {
             postponedUpdates, batchingCallback, endX, posNew - endY, endY);
       }
       for (int i = snakeSize - 1; i >= 0; i--) {
-        if ((mOldItemStatuses[snake.x + i] & FLAG_MASK) == FLAG_CHANGED) {
+        if ((_mOldItemStatuses[snake.x + i] & FLAG_MASK) == FLAG_CHANGED) {
           batchingCallback.onChanged(snake.x + i, 1,
-              mCallback.getChangePayload(snake.x + i, snake.y + i));
+              _mCallback.getChangePayload(snake.x + i, snake.y + i));
         }
       }
       posOld = snake.x;
@@ -331,6 +331,38 @@ class DiffResult {
     }
     batchingCallback.dispatchLastEvent();
   }
+
+  /*Iterable<String> getDifference() sync* {
+    if (_mDetectMoves) {
+      throw StateError("not supported if detectMoves == true");
+    }
+    final List<_PostponedUpdate> postponedUpdates = [];
+    int posOld = _mOldListSize;
+    int posNew = _mNewListSize;
+    for (int snakeIndex = _mSnakes.length - 1; snakeIndex >= 0; snakeIndex--) {
+      final _Snake snake = _mSnakes[snakeIndex];
+      final int snakeSize = snake.size;
+      final int endX = snake.x + snakeSize;
+      final int endY = snake.y + snakeSize;
+      if (endX < posOld) {
+        yield "removed at $endX: ${posOld -
+            endX} items"; //updateCallback.onRemoved(start, count);
+        /*_dispatchRemovals(
+            postponedUpdates, batchingCallback, endX, posOld - endX, endX);*/
+      }
+      if (endY < posNew) {
+        yield "added  at $endX: ${posNew - endY} items";
+      }
+      for (int i = snakeSize - 1; i >= 0; i--) {
+        if ((_mOldItemStatuses[snake.x + i] & FLAG_MASK) == FLAG_CHANGED) {
+          yield "item changed at ${snake.x + i} with payload ${_mCallback
+              .getChangePayload(snake.x + i, snake.y + i)}";
+        }
+      }
+      posOld = snake.x;
+      posNew = snake.y;
+    }
+  }*/
 
   static _PostponedUpdate _removePostponedUpdate(
       List<_PostponedUpdate> updates, int pos, bool removal) {
@@ -354,12 +386,12 @@ class DiffResult {
       int start,
       int count,
       int globalIndex) {
-    if (!mDetectMoves) {
+    if (!_mDetectMoves) {
       updateCallback.onInserted(start, count);
       return;
     }
     for (int i = count - 1; i >= 0; i--) {
-      final int status = mNewItemStatuses[globalIndex + i] & FLAG_MASK;
+      final int status = _mNewItemStatuses[globalIndex + i] & FLAG_MASK;
       switch (status) {
         case 0: // real addition
           updateCallback.onInserted(start, 1);
@@ -369,7 +401,7 @@ class DiffResult {
           break;
         case FLAG_MOVED_CHANGED:
         case FLAG_MOVED_NOT_CHANGED:
-          final int pos = mNewItemStatuses[globalIndex + i] >> FLAG_OFFSET;
+          final int pos = _mNewItemStatuses[globalIndex + i] >> FLAG_OFFSET;
           final _PostponedUpdate update =
               _removePostponedUpdate(postponedUpdates, pos, true);
           // the item was moved from that position
@@ -378,7 +410,7 @@ class DiffResult {
           if (status == FLAG_MOVED_CHANGED) {
             // also dispatch a change
             updateCallback.onChanged(
-                start, 1, mCallback.getChangePayload(pos, globalIndex + i));
+                start, 1, _mCallback.getChangePayload(pos, globalIndex + i));
           }
           break;
         case FLAG_IGNORE: // ignoring this
@@ -399,12 +431,12 @@ class DiffResult {
       int start,
       int count,
       int globalIndex) {
-    if (!mDetectMoves) {
+    if (!_mDetectMoves) {
       updateCallback.onRemoved(start, count);
       return;
     }
     for (int i = count - 1; i >= 0; i--) {
-      final int status = mOldItemStatuses[globalIndex + i] & FLAG_MASK;
+      final int status = _mOldItemStatuses[globalIndex + i] & FLAG_MASK;
       switch (status) {
         case 0: // real removal
           updateCallback.onRemoved(start + i, 1);
@@ -414,7 +446,7 @@ class DiffResult {
           break;
         case FLAG_MOVED_CHANGED:
         case FLAG_MOVED_NOT_CHANGED:
-          final int pos = mOldItemStatuses[globalIndex + i] >> FLAG_OFFSET;
+          final int pos = _mOldItemStatuses[globalIndex + i] >> FLAG_OFFSET;
           final _PostponedUpdate update =
               _removePostponedUpdate(postponedUpdates, pos, false);
           // the item was moved to that position. we do -1 because this is a move not
@@ -424,7 +456,7 @@ class DiffResult {
           if (status == FLAG_MOVED_CHANGED) {
             // also dispatch a change
             updateCallback.onChanged(update.currentPos - 1, 1,
-                mCallback.getChangePayload(globalIndex + i, pos));
+                _mCallback.getChangePayload(globalIndex + i, pos));
           }
           break;
         case FLAG_IGNORE: // ignoring this
@@ -442,7 +474,7 @@ class DiffResult {
 
   @override
   String toString() {
-    return 'DiffResult{mSnakes: $mSnakes}, ';
+    return 'DiffResult{mSnakes: $_mSnakes}, ';
   }
 }
 
@@ -601,7 +633,7 @@ class BatchingListUpdateCallback implements ListUpdateCallback {
 /// @return A DiffResult that contains the information about the edit sequence to convert the
 /// old list into the new list.
 ///
-DiffResult calculateDiff(DiffDelegate cb, {bool detectMoves = true}) {
+DiffResult calculateDiff(DiffDelegate cb, {bool detectMoves = false}) {
   final int oldSize = cb.getOldListSize();
   final int newSize = cb.getNewListSize();
   final List<_Snake> snakes = [];
@@ -780,6 +812,8 @@ DiffResult calculateListDiff<T>(List<T> oldList, List<T> newList,
       detectMoves: detectMoves);
 }
 
+/// you can use this function if you want to use custom list-types, such as BuiltList
+/// or KtList and want to avoid copying
 DiffResult calculateCustomListDiff<T, L>(L oldList, L newList,
     {bool detectMoves = true,
     bool Function(T, T) equalityChecker,
