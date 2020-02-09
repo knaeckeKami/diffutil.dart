@@ -197,6 +197,73 @@ void main() {
 
     mockito.verifyNoMoreInteractions(mockCallback);
   });
+
+  test("change detection + move detection", () {
+    diffutil
+        .calculateDiff(
+            DataObjectListDiff([
+              DataObject(id: 1, payload: 1),
+              DataObject(id: 2, payload: 2)
+            ], [
+              DataObject(id: 0, payload: -1),
+              DataObject(id: 2, payload: 3),
+              DataObject(id: 1, payload: 1),
+              DataObject(id: 3, payload: 2)
+            ]),
+            detectMoves: true)
+        .dispatchUpdatesTo(mockCallback);
+
+    mockito.verify(mockCallback.onInserted(1, 1));
+    mockito.verify(mockCallback.onMoved(2, 0));
+    mockito.verify(mockCallback.onChanged(0, 1, null));
+    mockito.verify(mockCallback.onInserted(0, 1));
+
+    mockito.verifyNoMoreInteractions(mockCallback);
+  });
+
+  test("change detection + move detection 2", () {
+    diffutil
+        .calculateDiff(
+            DataObjectListDiff([
+              DataObject(id: 1, payload: 1),
+              DataObject(id: 2, payload: 2)
+            ], [
+              DataObject(id: 1, payload: 0),
+              DataObject(id: 2, payload: 3),
+              DataObject(id: 1, payload: 1)
+            ]),
+            detectMoves: true)
+        .dispatchUpdatesTo(mockCallback);
+
+    mockito.verify(mockCallback.onInserted(2, 1));
+    mockito.verify(mockCallback.onChanged(0, 2, null));
+
+    mockito.verifyNoMoreInteractions(mockCallback);
+  });
+
+  test("change detection + move detection 3", () {
+    diffutil
+        .calculateDiff(
+            DataObjectListDiff([
+              DataObject(id: 1, payload: 1),
+              DataObject(id: 3, payload: 0),
+              DataObject(id: 2, payload: 2),
+            ], [
+              DataObject(id: 3, payload: 1),
+              DataObject(id: 1, payload: 0),
+            ]),
+            detectMoves: true)
+        .dispatchUpdatesTo(mockCallback);
+
+    mockito.verifyInOrder([
+      mockCallback.onRemoved(2, 1),
+      mockCallback.onChanged(1, 1, null),
+      mockCallback.onMoved(0, 1),
+      mockCallback.onChanged(1, 1, null)
+    ]);
+
+    mockito.verifyNoMoreInteractions(mockCallback);
+  });
 }
 
 class MockitoDiffCallback extends mockito.Mock
