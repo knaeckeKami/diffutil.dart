@@ -140,6 +140,18 @@ void main() {
 
       mockito.verifyNoMoreInteractions(mockCallback);
     });
+
+    test("change detection with payload", (){
+
+      diffutil
+          .calculateDiff(DataObjectListDiffWithPayload(
+          [DataObject(id: 1, payload: 0)], [DataObject(id: 1, payload: 1)]))
+          .dispatchUpdatesTo(mockCallback);
+      mockito.verify(mockCallback.onChanged(0, 1, 1));
+
+      mockito.verifyNoMoreInteractions(mockCallback);
+
+    });
   });
 
   group("move detection:", () {
@@ -300,4 +312,27 @@ class DataObjectListDiff extends diffutil.ListDiffDelegate<DataObject> {
   bool areItemsTheSame(int oldItemPosition, int newItemPosition) {
     return oldList[oldItemPosition].id == newList[newItemPosition].id;
   }
+}
+
+
+class DataObjectListDiffWithPayload extends diffutil.ListDiffDelegate<DataObject> {
+  DataObjectListDiffWithPayload(List<DataObject> oldList, List<DataObject> newList)
+      : super(oldList, newList);
+
+  @override
+  bool areContentsTheSame(int oldItemPosition, int newItemPosition) {
+    return equalityChecker(oldList[oldItemPosition], newList[newItemPosition]);
+  }
+
+  @override
+  bool areItemsTheSame(int oldItemPosition, int newItemPosition) {
+    return oldList[oldItemPosition].id == newList[newItemPosition].id;
+  }
+
+  @override
+  Object getChangePayload(int oldItemPosition, int newItemPosition) {
+    return newList[newItemPosition].payload;
+  }
+
+
 }
