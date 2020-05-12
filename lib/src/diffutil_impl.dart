@@ -1,7 +1,9 @@
 import 'dart:math' as math;
 import 'dart:typed_data';
 
+import 'package:diffutil_dart/src/diff_callback_to_list_adapter.dart';
 import 'package:diffutil_dart/src/diff_delegate.dart';
+import 'package:diffutil_dart/src/model/diffupdate.dart';
 
 ///
 ///Snakes represent a match between two lists. It is optionally prefixed or postfixed with an
@@ -196,8 +198,10 @@ class DiffResult {
         final bool theSame =
             _mCallback.areContentsTheSame(oldItemPos, newItemPos);
         final int changeFlag = theSame ? FLAG_NOT_CHANGED : FLAG_CHANGED;
-        _mOldItemStatuses[oldItemPos] = (newItemPos << FLAG_OFFSET) | changeFlag;
-        _mNewItemStatuses[newItemPos] = (oldItemPos << FLAG_OFFSET) | changeFlag;
+        _mOldItemStatuses[oldItemPos] =
+            (newItemPos << FLAG_OFFSET) | changeFlag;
+        _mNewItemStatuses[newItemPos] =
+            (oldItemPos << FLAG_OFFSET) | changeFlag;
       }
       posOld = snake.x;
       posNew = snake.y;
@@ -330,6 +334,12 @@ class DiffResult {
       posNew = snake.y;
     }
     batchingCallback.dispatchLastEvent();
+  }
+
+  List<DiffUpdate> getUpdates() {
+    final adapter = CallbackToListAdapter();
+    dispatchUpdatesTo(adapter);
+    return adapter.updates;
   }
 
   /*Iterable<String> getDifference() sync* {

@@ -1,3 +1,7 @@
+## 0.1.0+1
+
+- more tests
+
 ## 0.1.0
 
 - Fix bug in move detection

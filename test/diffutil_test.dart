@@ -1,4 +1,5 @@
 import 'package:diffutil_dart/diffutil.dart' as diffutil;
+import 'package:diffutil_dart/src/model/diffupdate.dart';
 import 'package:mockito/mockito.dart' as mockito;
 import 'package:test/test.dart';
 
@@ -141,16 +142,14 @@ void main() {
       mockito.verifyNoMoreInteractions(mockCallback);
     });
 
-    test("change detection with payload", (){
-
+    test("change detection with payload", () {
       diffutil
           .calculateDiff(DataObjectListDiffWithPayload(
-          [DataObject(id: 1, payload: 0)], [DataObject(id: 1, payload: 1)]))
+              [DataObject(id: 1, payload: 0)], [DataObject(id: 1, payload: 1)]))
           .dispatchUpdatesTo(mockCallback);
       mockito.verify(mockCallback.onChanged(0, 1, 1));
 
       mockito.verifyNoMoreInteractions(mockCallback);
-
     });
   });
 
@@ -276,6 +275,41 @@ void main() {
 
     mockito.verifyNoMoreInteractions(mockCallback);
   });
+
+  group("list result is equivalent to callback dispatch", () {
+    test("insert works in result list", () {
+      expect(diffutil.calculateListDiff([1, 2, 3], [1, 2, 3]).getUpdates(),
+          isEmpty);
+
+      var updates = diffutil
+          .calculateDiff(
+              DataObjectListDiff([
+                DataObject(id: 1, payload: 1),
+                DataObject(id: 2, payload: 2)
+              ], [
+                DataObject(id: 1, payload: 0),
+                DataObject(id: 2, payload: 3),
+                DataObject(id: 1, payload: 1)
+              ]),
+              detectMoves: true)
+          .getUpdates();
+
+      expect(updates, const [
+        DiffUpdate.insert(position: 2, count: 1),
+        DiffUpdate.change(position: 0, payload: null),
+        DiffUpdate.change(position: 1, payload: null)
+      ]);
+
+      updates = diffutil.calculateListDiff([0, 1, 2, 3], [2, 1],
+          detectMoves: true).getUpdates();
+
+      expect(updates, const [
+        DiffUpdate.remove(position: 3, count: 1),
+        DiffUpdate.remove(position: 0, count: 1),
+        DiffUpdate.move(from: 1, to: 0),
+      ]);
+    });
+  });
 }
 
 class MockitoDiffCallback extends mockito.Mock
@@ -314,9 +348,10 @@ class DataObjectListDiff extends diffutil.ListDiffDelegate<DataObject> {
   }
 }
 
-
-class DataObjectListDiffWithPayload extends diffutil.ListDiffDelegate<DataObject> {
-  DataObjectListDiffWithPayload(List<DataObject> oldList, List<DataObject> newList)
+class DataObjectListDiffWithPayload
+    extends diffutil.ListDiffDelegate<DataObject> {
+  DataObjectListDiffWithPayload(
+      List<DataObject> oldList, List<DataObject> newList)
       : super(oldList, newList);
 
   @override
@@ -333,6 +368,4 @@ class DataObjectListDiffWithPayload extends diffutil.ListDiffDelegate<DataObject
   Object getChangePayload(int oldItemPosition, int newItemPosition) {
     return newList[newItemPosition].payload;
   }
-
-
 }
