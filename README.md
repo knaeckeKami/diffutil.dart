@@ -34,6 +34,21 @@ Or use `calculateCustomListDiff` and `CustomListDiffDelegate`.
 
 ### Using the result:
 
+Call `.getUpdates()` on the `diffResult` to get a List of `DiffUpdate` objects. These are sealed classes generated the 
+the freezed library.
+
+```dart
+  for (final update in diffResult.getUpdates())
+    update.when(
+      insert: (pos, count) => print("inserted $count on $pos"),
+      remove: (pos, count) => print("removed $count on $pos"),
+      change: (pos, payload) => print("changed on $pos with payload $payload"),
+      move: (from, to) => print("move $from to $to"),
+    );
+```
+
+OR
+
 Implement `ListUpdateCallback` and call `diffResult.dispatchUpdatesTo(myCallback);`
 
 ## Performance metrics:

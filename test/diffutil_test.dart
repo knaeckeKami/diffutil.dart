@@ -294,6 +294,7 @@ void main() {
               detectMoves: true)
           .getUpdates();
 
+
       expect(updates, const [
         DiffUpdate.insert(position: 2, count: 1),
         DiffUpdate.change(position: 0, payload: null),

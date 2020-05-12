@@ -8,6 +8,17 @@ void main() {
 
   final listDiff = diffutil.calculateListDiff(oldList, newList);
 
+  // use the diff using a list of diff objects
+  for (final update in listDiff.getUpdates())
+    update.when(
+      insert: (pos, count) => print("inserted $count on $pos"),
+      remove: (pos, count) => print("removed $count on $pos"),
+      change: (pos, payload) => print("changed on $pos with payload $payload"),
+      move: (from, to) => print("move $from to $to"),
+    );
+
+  // use the diff using a custom callback class
+
   listDiff.dispatchUpdatesTo(MyListCallback());
 
   final oldList2 = [1, 2, 3];
@@ -17,7 +28,8 @@ void main() {
 
   print("difference between $oldList and $newList, without move detection:");
 
-  final listDiff2 = diffutil.calculateListDiff(oldList2, newList2, detectMoves: false);
+  final listDiff2 =
+      diffutil.calculateListDiff(oldList2, newList2, detectMoves: false);
 
   listDiff2.dispatchUpdatesTo(MyListCallback());
 
@@ -25,10 +37,10 @@ void main() {
 
   print("difference between $oldList and $newList, with move detection:");
 
-  final listDiff3 = diffutil.calculateListDiff(oldList2, newList2, detectMoves: true);
+  final listDiff3 =
+      diffutil.calculateListDiff(oldList2, newList2, detectMoves: true);
 
   listDiff3.dispatchUpdatesTo(MyListCallback());
-
 }
 
 class MyListCallback implements diffutil.ListUpdateCallback {
