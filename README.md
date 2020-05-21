@@ -1,7 +1,6 @@
 # diffutil.dart
 
 [![Pub Package](https://img.shields.io/pub/v/diffutil_dart.svg)](https://pub.dartlang.org/packages/diffutil_dart)
-![Coverage](https://raw.githubusercontent.com/knaeckeKami/diffutil.dart/master/coverage_badge.svg?sanitize=true)
 
 
 Calculate the difference between two lists.
@@ -17,7 +16,7 @@ There are often situations, where an app displays a list of items, which are fet
 sent as delta, but as a whole new list.
 
 It can be useful to take the old list and the new list and calculate the difference between those two, for example when animating the insertion and removal of new
-items in the displayed list (See [diffutil_sliverlist](https://pub.dev/packages/diffutil_sliverlist).
+items in the displayed list (See [diffutil_sliverlist](https://pub.dev/packages/diffutil_sliverlist)).
 
 This package does exactly that:
 It takes two lists and calculates the changeset between those two lists as list of Insert, Remove, Change and Move operations.

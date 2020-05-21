@@ -1,4 +1,4 @@
-## 1.0.0
+## 1.0.0-alpha
 
 Major revamp to make the libary more Dart-y and less cumbersome to use!
 
