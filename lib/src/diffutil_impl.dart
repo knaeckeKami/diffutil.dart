@@ -1,4 +1,5 @@
 import 'dart:math' as math;
+import 'dart:math';
 import 'dart:typed_data';
 
 import 'package:diffutil_dart/src/diff_callback_to_list_adapter.dart';
@@ -294,7 +295,7 @@ class DiffResult {
   ///@param updateCallback The callback to receive the update operations.
   ///@see #dispatchUpdatesTo(RecyclerView.Adapter)
   ///
-
+  @Deprecated("consider using getUpdates() instead")
   void dispatchUpdatesTo(ListUpdateCallback updateCallback) {
     BatchingListUpdateCallback batchingCallback;
     if (updateCallback is BatchingListUpdateCallback) {
@@ -336,16 +337,10 @@ class DiffResult {
     batchingCallback.dispatchLastEvent();
   }
 
-  List<DiffUpdate> getUpdates() {
-    final adapter = CallbackToListAdapter();
-    dispatchUpdatesTo(adapter);
-    return adapter.updates;
-  }
-
-  /*Iterable<String> getDifference() sync* {
-    if (_mDetectMoves) {
-      throw StateError("not supported if detectMoves == true");
-    }
+  Iterable<DiffUpdate> getUpdates({bool batch = true}) {
+    final updates = <DiffUpdate>[];
+    // These are add/remove ops that are converted to moves. We track their positions until
+    // their respective update operations are processed.
     final List<_PostponedUpdate> postponedUpdates = [];
     int posOld = _mOldListSize;
     int posNew = _mNewListSize;
@@ -355,24 +350,25 @@ class DiffResult {
       final int endX = snake.x + snakeSize;
       final int endY = snake.y + snakeSize;
       if (endX < posOld) {
-        yield "removed at $endX: ${posOld -
-            endX} items"; //updateCallback.onRemoved(start, count);
-        /*_dispatchRemovals(
-            postponedUpdates, batchingCallback, endX, posOld - endX, endX);*/
+        _dispatchRemovals2(
+            postponedUpdates, updates, endX, posOld - endX, endX);
       }
       if (endY < posNew) {
-        yield "added  at $endX: ${posNew - endY} items";
+        _dispatchAdditions2(
+            postponedUpdates, updates, endX, posNew - endY, endY);
       }
       for (int i = snakeSize - 1; i >= 0; i--) {
         if ((_mOldItemStatuses[snake.x + i] & FLAG_MASK) == FLAG_CHANGED) {
-          yield "item changed at ${snake.x + i} with payload ${_mCallback
-              .getChangePayload(snake.x + i, snake.y + i)}";
+          updates.add(DiffUpdate.change(
+              position: snake.x + i,
+              payload: _mCallback.getChangePayload(snake.x + i, snake.y + i)));
         }
       }
       posOld = snake.x;
       posNew = snake.y;
     }
-  }*/
+    return batch ? updates.batch() : updates;
+  }
 
   static _PostponedUpdate _removePostponedUpdate(
       List<_PostponedUpdate> updates, int pos, bool removal) {
@@ -390,6 +386,7 @@ class DiffResult {
     return null;
   }
 
+  @deprecated
   void _dispatchAdditions(
       List<_PostponedUpdate> postponedUpdates,
       ListUpdateCallback updateCallback,
@@ -435,6 +432,7 @@ class DiffResult {
     }
   }
 
+  @deprecated
   void _dispatchRemovals(
       List<_PostponedUpdate> postponedUpdates,
       ListUpdateCallback updateCallback,
@@ -486,6 +484,92 @@ class DiffResult {
   String toString() {
     return 'DiffResult{mSnakes: $_mSnakes}, ';
   }
+
+  void _dispatchRemovals2(List<_PostponedUpdate> postponedUpdates,
+      List<DiffUpdate> updates, int start, int count, int globalIndex) {
+    if (!_mDetectMoves) {
+      updates.add(DiffUpdate.remove(position: start, count: count));
+      return;
+    }
+    for (int i = count - 1; i >= 0; i--) {
+      final int status = _mOldItemStatuses[globalIndex + i] & FLAG_MASK;
+      switch (status) {
+        case 0: // real removal
+          updates.add(DiffUpdate.remove(position: start + i, count: 1));
+          for (_PostponedUpdate update in postponedUpdates) {
+            update.currentPos -= 1;
+          }
+          break;
+        case FLAG_MOVED_CHANGED:
+        case FLAG_MOVED_NOT_CHANGED:
+          final int pos = _mOldItemStatuses[globalIndex + i] >> FLAG_OFFSET;
+          final _PostponedUpdate update =
+              _removePostponedUpdate(postponedUpdates, pos, false);
+          // the item was moved to that position. we do -1 because this is a move not
+          // add and removing current item offsets the target move by 1
+          //noinspection ConstantConditions
+          updates
+              .add(DiffUpdate.move(from: start + i, to: update.currentPos - 1));
+          if (status == FLAG_MOVED_CHANGED) {
+            // also dispatch a change
+            updates.add(DiffUpdate.change(
+                position: update.currentPos - 1,
+                payload: _mCallback.getChangePayload(globalIndex + i, pos)));
+          }
+          break;
+        case FLAG_IGNORE: // ignoring this
+          postponedUpdates.add(_PostponedUpdate(
+              posInOwnerList: globalIndex + i,
+              currentPos: start + i,
+              removal: true));
+          break;
+        default:
+          throw StateError(
+              "unknown flag for pos  ${globalIndex + i}:  $status");
+      }
+    }
+  }
+
+  void _dispatchAdditions2(List<_PostponedUpdate> postponedUpdates,
+      List<DiffUpdate> updates, int start, int count, int globalIndex) {
+    if (!_mDetectMoves) {
+      updates.add(DiffUpdate.insert(position: start, count: count));
+      return;
+    }
+    for (int i = count - 1; i >= 0; i--) {
+      final int status = _mNewItemStatuses[globalIndex + i] & FLAG_MASK;
+      switch (status) {
+        case 0: // real addition
+          updates.add(DiffUpdate.insert(position: start, count: 1));
+          for (_PostponedUpdate update in postponedUpdates) {
+            update.currentPos += 1;
+          }
+          break;
+        case FLAG_MOVED_CHANGED:
+        case FLAG_MOVED_NOT_CHANGED:
+          final int pos = _mNewItemStatuses[globalIndex + i] >> FLAG_OFFSET;
+          final _PostponedUpdate update =
+              _removePostponedUpdate(postponedUpdates, pos, true);
+          // the item was moved from that position
+          updates.add(DiffUpdate.move(from: update.currentPos, to: start));
+          if (status == FLAG_MOVED_CHANGED) {
+            // also dispatch a change
+            updates.add(DiffUpdate.change(
+                position: start,
+                payload: _mCallback.getChangePayload(pos, globalIndex + i)));
+          }
+          break;
+        case FLAG_IGNORE: // ignoring this
+          postponedUpdates.add(_PostponedUpdate(
+              posInOwnerList: globalIndex + i,
+              currentPos: start,
+              removal: false));
+          break;
+        default:
+          throw StateError("unknown flag for pos ${globalIndex + i}:  $status");
+      }
+    }
+  }
 }
 
 class _PostponedUpdate {
@@ -496,6 +580,7 @@ class _PostponedUpdate {
   _PostponedUpdate({this.posInOwnerList, this.currentPos, this.removal});
 }
 
+@deprecated
 abstract class ListUpdateCallback {
   ///
   ///Called when {@code count} number of items are inserted at the given position.
@@ -838,4 +923,45 @@ DiffResult calculateCustomListDiff<T, L>(L oldList, L newList,
         getByIndex: getByIndex,
       ),
       detectMoves: detectMoves);
+}
+
+extension _Batch on Iterable<DiffUpdate> {
+  Iterable<DiffUpdate> batch() sync* {
+    DiffUpdate lastUpdate = null;
+    for (final update in this) {
+      if (lastUpdate.runtimeType != update.runtimeType) {
+        if (lastUpdate != null) {
+          yield lastUpdate;
+        }
+        lastUpdate = update;
+      } else {
+        if (lastUpdate is Move || lastUpdate is Change) {
+          yield lastUpdate;
+          lastUpdate = update;
+        } else if (update is Insert) {
+          final lastInsert = lastUpdate as Insert;
+          if ((update.position - lastInsert.position).abs() <= 1) {
+            lastUpdate = DiffUpdate.insert(
+                position: min(update.position, lastInsert.position),
+                count: update.count + lastInsert.count);
+          } else {
+            yield lastUpdate;
+            lastUpdate = update;
+          }
+        } else {
+          final remove = update as Remove;
+          final lastRemove = lastUpdate as Remove;
+          if ((remove.position - lastRemove.position).abs() <= 1) {
+            lastUpdate = DiffUpdate.remove(
+                position: min(remove.position, lastRemove.position),
+                count: remove.count + lastRemove.count);
+          } else {
+            yield lastUpdate;
+            lastUpdate = update;
+          }
+        }
+      }
+    }
+    if (lastUpdate != null) yield lastUpdate;
+  }
 }

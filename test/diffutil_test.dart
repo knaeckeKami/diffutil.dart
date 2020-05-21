@@ -276,9 +276,13 @@ void main() {
     mockito.verifyNoMoreInteractions(mockCallback);
   });
 
-  group("list result is equivalent to callback dispatch", () {
+  group("test list result calculaction", () {
     test("insert works in result list", () {
-      expect(diffutil.calculateListDiff([1, 2, 3], [1, 2, 3]).getUpdates(),
+      expect(
+          diffutil
+              .calculateListDiff([1, 2, 3], [1, 2, 3])
+              .getUpdates(batch: true)
+              .toList(),
           isEmpty);
 
       var updates = diffutil
@@ -292,22 +296,58 @@ void main() {
                 DataObject(id: 1, payload: 1)
               ]),
               detectMoves: true)
-          .getUpdates();
-
+          .getUpdates()
+          .toList();
 
       expect(updates, const [
         DiffUpdate.insert(position: 2, count: 1),
+        DiffUpdate.change(position: 1, payload: null),
         DiffUpdate.change(position: 0, payload: null),
-        DiffUpdate.change(position: 1, payload: null)
       ]);
 
-      updates = diffutil.calculateListDiff([0, 1, 2, 3], [2, 1],
-          detectMoves: true).getUpdates();
+      updates = diffutil
+          .calculateListDiff([0, 1, 2, 3], [2, 1], detectMoves: true)
+          .getUpdates(batch: true)
+          .toList();
 
       expect(updates, const [
         DiffUpdate.remove(position: 3, count: 1),
         DiffUpdate.remove(position: 0, count: 1),
         DiffUpdate.move(from: 1, to: 0),
+      ]);
+    });
+
+    test(
+        "empty list -> [1,2,3] should have one call to onInserted with count of 3 on position 0",
+        () {
+      final updates = diffutil.calculateListDiff([], [1, 2, 3]).getUpdates();
+
+      expect(updates, const [DiffUpdate.insert(position: 0, count: 3)]);
+    });
+
+    test(
+        "[1,2,3] -> empty list should have one call to onRemoved with count of 3 on position 0",
+        () {
+      final updates = diffutil
+          .calculateListDiff([1, 2, 3], [])
+          .getUpdates(batch: true)
+          .toList();
+
+      expect(updates, const [DiffUpdate.remove(position: 0, count: 3)]);
+    });
+
+    test(
+        "[1,2,3] -> empty list should have 3 remove operations when noch batched",
+        () {
+      final updates = diffutil
+          .calculateListDiff([1, 2, 3], [])
+          .getUpdates(batch: false)
+          .toList();
+
+      expect(updates, const [
+        DiffUpdate.remove(position: 2, count: 1),
+        DiffUpdate.remove(position: 1, count: 1),
+        DiffUpdate.remove(position: 0, count: 1)
       ]);
     });
   });

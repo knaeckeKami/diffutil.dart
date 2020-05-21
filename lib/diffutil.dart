@@ -9,3 +9,6 @@ export 'package:diffutil_dart/src/diffutil_impl.dart'
         calculateCustomListDiff,
         DiffResult,
         ListUpdateCallback;
+
+export 'package:diffutil_dart/src/model/diffupdate.dart'
+    show DiffUpdate, Insert, Remove, Move, Change, BatchableDiff;
