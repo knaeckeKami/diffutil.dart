@@ -62,7 +62,7 @@ Move operations are only calculated if `calculateListDiff` was called with `dete
     );
 ```
 
-By default, `Insert` and `Remove` Operations are batched. (e.q. multiple consecutive inserts or removes are represented by a single `Insert`/`Remove` object with a `count` field > 1).
+By default, `Insert` and `Remove` Operations are batched. (e.g. multiple consecutive inserts or removes are represented by a single `Insert`/`Remove` object with a `count` field > 1).
 If you want to turn off changeset batching, call `getUpdates(batch: false)`.
 This means, every `Insert` and `Remove` operation will have a count of 1 and the changeset of `[]` and `[1, 2]` will be 
 `[Insert(position: 0, count : 1), Insert(position: 0, count :1 )]` 
