@@ -10,8 +10,8 @@ void main() {
     mockCallback = MockitoDiffCallback();
   });
 
-  group("basis behaviour: ", () {
-    test("same list should have no diff", () {
+  group('basis behaviour: ', () {
+    test('same list should have no diff', () {
       diffutil.calculateListDiff(
           [1, 2, 3], [1, 2, 3]).dispatchUpdatesTo(mockCallback);
 
@@ -19,7 +19,7 @@ void main() {
     });
 
     test(
-        "empty list -> [1,2,3] should have one call to onInserted with count of 3 on position 0",
+        'empty list -> [1,2,3] should have one call to onInserted with count of 3 on position 0',
         () {
       diffutil.calculateListDiff([], [1, 2, 3]).dispatchUpdatesTo(mockCallback);
 
@@ -29,7 +29,7 @@ void main() {
     });
 
     test(
-        "[1,2,3] -> empty list should have one call to onRemoved with count of 3 on position 0",
+        '[1,2,3] -> empty list should have one call to onRemoved with count of 3 on position 0',
         () {
       diffutil.calculateListDiff([1, 2, 3], []).dispatchUpdatesTo(mockCallback);
 
@@ -39,7 +39,7 @@ void main() {
     });
 
     test(
-        "[1,2,3] -> [1,2,4] list should have one call to onChanged on position 2",
+        '[1,2,3] -> [1,2,4] list should have one call to onChanged on position 2',
         () {
       diffutil.calculateListDiff(
           [1, 2, 3], [1, 0, 3]).dispatchUpdatesTo(mockCallback);
@@ -57,7 +57,7 @@ void main() {
     });
 
     test(
-        "[1,2,3] -> [1,4,1] list should have one call to onChanged on position 2",
+        '[1,2,3] -> [1,4,1] list should have one call to onChanged on position 2',
         () {
       diffutil.calculateListDiff(
           [1, 2, 3], [1, 3, 4, 5]).dispatchUpdatesTo(mockCallback);
@@ -75,8 +75,8 @@ void main() {
     });
   });
 
-  group("change detection: ", () {
-    test("onChanged should be called", () {
+  group('change detection: ', () {
+    test('onChanged should be called', () {
       diffutil
           .calculateDiff(DataObjectListDiff(
               [DataObject(id: 1, payload: 0)], [DataObject(id: 1, payload: 1)]))
@@ -86,7 +86,7 @@ void main() {
       mockito.verifyNoMoreInteractions(mockCallback);
     });
 
-    test("onChanged should not be called if no payload changed", () {
+    test('onChanged should not be called if no payload changed', () {
       diffutil
           .calculateDiff(DataObjectListDiff(
               [DataObject(id: 1, payload: 1)], [DataObject(id: 1, payload: 1)]))
@@ -95,7 +95,7 @@ void main() {
       mockito.verifyZeroInteractions(mockCallback);
     });
 
-    test("onInserted works also with change detection", () {
+    test('onInserted works also with change detection', () {
       diffutil
           .calculateDiff(DataObjectListDiff([
             DataObject(id: 1, payload: 1),
@@ -112,7 +112,7 @@ void main() {
       mockito.verifyNoMoreInteractions(mockCallback);
     });
 
-    test("onRemoved works also with change detection", () {
+    test('onRemoved works also with change detection', () {
       diffutil
           .calculateDiff(DataObjectListDiff(
               [DataObject(id: 1, payload: 1), DataObject(id: 2, payload: 2)],
@@ -126,7 +126,7 @@ void main() {
       mockito.verifyNoMoreInteractions(mockCallback);
     });
 
-    test("onInserted and onRemoved works also with change detection", () {
+    test('onInserted and onRemoved works also with change detection', () {
       diffutil
           .calculateDiff(DataObjectListDiff(
               [DataObject(id: 1, payload: 1), DataObject(id: 2, payload: 2)],
@@ -142,7 +142,7 @@ void main() {
       mockito.verifyNoMoreInteractions(mockCallback);
     });
 
-    test("change detection with payload", () {
+    test('change detection with payload', () {
       diffutil
           .calculateDiff(DataObjectListDiffWithPayload(
               [DataObject(id: 1, payload: 0)], [DataObject(id: 1, payload: 1)]))
@@ -153,8 +153,8 @@ void main() {
     });
   });
 
-  group("move detection:", () {
-    test("should detect moves", () {
+  group('move detection:', () {
+    test('should detect moves', () {
       diffutil.calculateListDiff([1, 2], [2, 1],
           detectMoves: true).dispatchUpdatesTo(mockCallback);
 
@@ -163,7 +163,7 @@ void main() {
       mockito.verifyNoMoreInteractions(mockCallback);
     });
 
-    test("should detect moves and inserts", () {
+    test('should detect moves and inserts', () {
       diffutil.calculateListDiff([
         1,
         2
@@ -180,7 +180,7 @@ void main() {
       mockito.verifyNoMoreInteractions(mockCallback);
     });
 
-    test("should detect moves and removes", () {
+    test('should detect moves and removes', () {
       diffutil.calculateListDiff([0, 1, 2, 3], [2, 1],
           detectMoves: true).dispatchUpdatesTo(mockCallback);
 
@@ -194,7 +194,7 @@ void main() {
     });
   });
 
-  test("test custom list diff", () {
+  test('test custom list diff', () {
     diffutil.calculateCustomListDiff<int, List<int>>([1, 2, 3], [2, 1, 4, 5],
         detectMoves: true,
         getLength: (l) => l.length,
@@ -209,7 +209,7 @@ void main() {
     mockito.verifyNoMoreInteractions(mockCallback);
   });
 
-  test("change detection + move detection", () {
+  test('change detection + move detection', () {
     diffutil
         .calculateDiff(
             DataObjectListDiff([
@@ -232,7 +232,7 @@ void main() {
     mockito.verifyNoMoreInteractions(mockCallback);
   });
 
-  test("change detection + move detection 2", () {
+  test('change detection + move detection 2', () {
     diffutil
         .calculateDiff(
             DataObjectListDiff([
@@ -252,7 +252,7 @@ void main() {
     mockito.verifyNoMoreInteractions(mockCallback);
   });
 
-  test("change detection + move detection 3", () {
+  test('change detection + move detection 3', () {
     diffutil
         .calculateDiff(
             DataObjectListDiff([
@@ -276,8 +276,8 @@ void main() {
     mockito.verifyNoMoreInteractions(mockCallback);
   });
 
-  group("test list result calculaction", () {
-    test("insert works in result list", () {
+  group('test list result calculaction', () {
+    test('insert works in result list', () {
       expect(
           diffutil
               .calculateListDiff([1, 2, 3], [1, 2, 3])
@@ -318,7 +318,7 @@ void main() {
     });
 
     test(
-        "empty list -> [1,2,3] should have one call to onInserted with count of 3 on position 0",
+        'empty list -> [1,2,3] should have one call to onInserted with count of 3 on position 0',
         () {
       final updates = diffutil.calculateListDiff([], [1, 2, 3]).getUpdates();
 
@@ -326,7 +326,7 @@ void main() {
     });
 
     test(
-        "[1,2,3] -> empty list should have one call to onRemoved with count of 3 on position 0",
+        '[1,2,3] -> empty list should have one call to onRemoved with count of 3 on position 0',
         () {
       final updates = diffutil
           .calculateListDiff([1, 2, 3], [])
@@ -337,7 +337,7 @@ void main() {
     });
 
     test(
-        "[1,2,3] -> empty list should have 3 remove operations when noch batched",
+        '[1,2,3] -> empty list should have 3 remove operations when noch batched',
         () {
       final updates = diffutil
           .calculateListDiff([1, 2, 3], [])
@@ -354,7 +354,9 @@ void main() {
 }
 
 class MockitoDiffCallback extends mockito.Mock
-    implements diffutil.ListUpdateCallback {}
+    // ignore: deprecated_member_use_from_same_package
+    implements
+        diffutil.ListUpdateCallback {}
 
 class DataObject {
   final int id;

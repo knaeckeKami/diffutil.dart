@@ -1,3 +1,5 @@
+import 'package:meta/meta.dart';
+
 abstract class DiffUpdate {
   const factory DiffUpdate.insert({int position, int count}) = Insert;
 
@@ -29,10 +31,12 @@ abstract class BatchableDiff {
 }
 
 class Insert implements DiffUpdate, BatchableDiff {
+  @override
   final int position;
+  @override
   final int count;
 
-  const Insert({this.position, this.count})
+  const Insert({@required this.position, @required this.count})
       : assert(position != null),
         assert(count != null);
 
@@ -63,10 +67,12 @@ class Insert implements DiffUpdate, BatchableDiff {
 }
 
 class Remove implements DiffUpdate, BatchableDiff {
+  @override
   final int position;
+  @override
   final int count;
 
-  const Remove({this.position, this.count})
+  const Remove({@required this.position, @required this.count})
       : assert(position != null),
         assert(count != null);
 
@@ -100,7 +106,8 @@ class Change implements DiffUpdate {
   final int position;
   final Object payload;
 
-  const Change({this.position, this.payload}) : assert(position != null);
+  const Change({@required this.position, this.payload})
+      : assert(position != null);
 
   @override
   bool operator ==(Object other) =>
@@ -132,7 +139,7 @@ class Move implements DiffUpdate {
   final int from;
   final int to;
 
-  const Move({this.from, this.to})
+  const Move({@required this.from, @required this.to})
       : assert(from != null),
         assert(to != null);
 

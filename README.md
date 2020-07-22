@@ -19,7 +19,7 @@ It can be useful to take the old list and the new list and calculate the differe
 items in the displayed list (See [diffutil_sliverlist](https://pub.dev/packages/diffutil_sliverlist)).
 
 This package does exactly that:
-It takes two lists and calculates the changeset between those two lists as list of Insert, Remove, Change and Move operations.
+It takes two lists and calculates the difference (or to be more accurate: edit script) between those two lists as list of Insert, Remove, Change and Move operations.
 
 
 ## Usage
@@ -63,8 +63,9 @@ Move operations are only calculated if `calculateListDiff` was called with `dete
 ```
 
 By default, `Insert` and `Remove` Operations are batched. (e.g. multiple consecutive inserts or removes are represented by a single `Insert`/`Remove` object with a `count` field > 1).
-If you want to turn off changeset batching, call `getUpdates(batch: false)`.
-This means, every `Insert` and `Remove` operation will have a count of 1 and the changeset of `[]` and `[1, 2]` will be 
+If you want to turn off edit script batching, call `getUpdates(batch: false)`.
+This means, every `Insert` and `Remove` operation will have a count of 1 and the edit script of `[]` and `[1, 2]` will be 
+
 `[Insert(position: 0, count : 1), Insert(position: 0, count :1 )]` 
 
 instead of
@@ -84,4 +85,5 @@ Same as Android's DiffUtil:
  - O(N + D^2) time performance where D is the length of the edit script.
  - additional O(N^2) time where N is the total number of added and removed items if move detection is enabled
  
+ The edit script is the smallest set of operations needed to transform the first list into the second list.
 

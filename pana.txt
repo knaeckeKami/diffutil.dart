@@ -1,0 +1,1321 @@
+{
+ "runtimeInfo": {
+  "panaVersion": "0.13.15",
+  "sdkVersion": "2.9.0-21.2.beta",
+  "flutterVersions": {
+   "frameworkVersion": "1.20.0-7.1.pre",
+   "channel": "dev",
+   "repositoryUrl": "https://github.com/flutter/flutter.git",
+   "frameworkRevision": "7736f3bc90270dcb0480db2ccffbf1d13c28db85",
+   "frameworkCommitDate": "2020-07-10 16:33:05 -0700",
+   "engineRevision": "d48085141c2f201b1c534e6926eb39bb52d9db3e",
+   "dartSdkVersion": "2.9.0 (build 2.9.0-21.2.beta)"
+  }
+ },
+ "packageName": "diffutil_dart",
+ "packageVersion": "1.0.0-alpha+3",
+ "pubspec": {
+  "name": "diffutil_dart",
+  "description": "Calculate the changeset between two lists. Used for implicitly animating Flutter lists without having to maintain a StatefulWidget.",
+  "version": "1.0.0-alpha+3",
+  "author": "Martin Kamleithner",
+  "homepage": "https://github.com/knaeckeKami/diffutil.dart",
+  "environment": {
+   "sdk": ">=2.6.0 <3.0.0"
+  },
+  "dev_dependencies": {
+   "test": "^1.14.4",
+   "mockito": "^4.1.1",
+   "test_coverage": "^0.4.1"
+  }
+ },
+ "platform": {
+  "components": [],
+  "uses": {
+   "flutter": "allowed",
+   "web": "allowed",
+   "other": "allowed"
+  },
+  "reason": "No platform restriction found in libraries."
+ },
+ "licenses": [
+  {
+   "path": "LICENSE",
+   "name": "Apache",
+   "version": "2.0",
+   "url": "https://github.com/knaeckeKami/diffutil.dart/blob/master/LICENSE"
+  }
+ ],
+ "health": {
+  "analyzeProcessFailed": false,
+  "formatProcessFailed": false,
+  "resolveProcessFailed": false,
+  "analyzerErrorCount": 0,
+  "analyzerWarningCount": 0,
+  "analyzerHintCount": 111,
+  "platformConflictCount": 0,
+  "suggestions": [
+   {
+    "code": "dartanalyzer.warning",
+    "level": "hint",
+    "title": "Fix `lib/src/diffutil_impl.dart`.",
+    "description": "Analysis of `lib/src/diffutil_impl.dart` reported 100 hints, including:\n\nline 49 col 3: Omit type annotations for local variables.\n\nline 155 col 5: Omit type annotations for local variables.\n\nline 174 col 5: Omit type annotations for local variables.\n\nline 175 col 5: Omit type annotations for local variables.\n\nline 177 col 10: Omit type annotations for local variables.",
+    "file": "lib/src/diffutil_impl.dart",
+    "score": 25.0
+   },
+   {
+    "code": "dartanalyzer.warning",
+    "level": "hint",
+    "title": "Fix `lib/src/model/diffupdate.dart`.",
+    "description": "Analysis of `lib/src/model/diffupdate.dart` reported 11 hints, including:\n\nline 32 col 13: Annotate overridden members.\n\nline 33 col 13: Annotate overridden members.\n\nline 35 col 22: Specify `@required` on named parameters without defaults.\n\nline 35 col 37: Specify `@required` on named parameters without defaults.\n\nline 66 col 13: Annotate overridden members.",
+    "file": "lib/src/model/diffupdate.dart",
+    "score": 5.36
+   }
+  ]
+ },
+ "maintenance": {
+  "missingChangelog": false,
+  "missingExample": false,
+  "missingReadme": false,
+  "missingAnalysisOptions": false,
+  "oldAnalysisOptions": false,
+  "strongModeEnabled": true,
+  "isExperimentalVersion": false,
+  "isPreReleaseVersion": true,
+  "suggestions": [
+   {
+    "code": "packageVersion.preRelease",
+    "level": "hint",
+    "title": "Package is pre-release.",
+    "description": "Pre-release versions should be used with caution; their API can change in breaking ways.",
+    "score": 5.0
+   }
+  ]
+ },
+ "pkgResolution": {
+  "dependencies": [
+   {
+    "package": "mockito",
+    "dependencyType": "dev",
+    "constraintType": "normal",
+    "constraint": "^4.1.1"
+   },
+   {
+    "package": "test",
+    "dependencyType": "dev",
+    "constraintType": "normal",
+    "constraint": "^1.14.4"
+   },
+   {
+    "package": "test_coverage",
+    "dependencyType": "dev",
+    "constraintType": "normal",
+    "constraint": "^0.4.1"
+   }
+  ]
+ },
+ "dartFiles": {
+  "lib/diffutil.dart": {
+   "uri": "package:diffutil_dart/diffutil.dart",
+   "size": 496,
+   "isFormatted": true,
+   "codeProblems": [],
+   "directLibs": [
+    "package:diffutil_dart/src/diff_delegate.dart",
+    "package:diffutil_dart/src/diffutil_impl.dart",
+    "package:diffutil_dart/src/model/diffupdate.dart"
+   ],
+   "platform": {
+    "components": [],
+    "uses": {
+     "flutter": "allowed",
+     "web": "allowed",
+     "other": "allowed"
+    }
+   }
+  },
+  "lib/src/diff_delegate.dart": {
+   "uri": "package:diffutil_dart/src/diff_delegate.dart",
+   "size": 3981,
+   "isFormatted": true,
+   "codeProblems": []
+  },
+  "lib/src/diffutil_impl.dart": {
+   "uri": "package:diffutil_dart/src/diffutil_impl.dart",
+   "size": 34643,
+   "isFormatted": true,
+   "codeProblems": [
+    {
+     "severity": "INFO",
+     "errorType": "LINT",
+     "errorCode": "omit_local_variable_types",
+     "file": "lib/src/diffutil_impl.dart",
+     "line": 49,
+     "col": 3,
+     "length": 28,
+     "description": "Omit type annotations for local variables."
+    },
+    {
+     "severity": "INFO",
+     "errorType": "LINT",
+     "errorCode": "omit_local_variable_types",
+     "file": "lib/src/diffutil_impl.dart",
+     "line": 155,
+     "col": 5,
+     "length": 66,
+     "description": "Omit type annotations for local variables."
+    },
+    {
+     "severity": "INFO",
+     "errorType": "LINT",
+     "errorCode": "omit_local_variable_types",
+     "file": "lib/src/diffutil_impl.dart",
+     "line": 174,
+     "col": 5,
+     "length": 26,
+     "description": "Omit type annotations for local variables."
+    },
+    {
+     "severity": "INFO",
+     "errorType": "LINT",
+     "errorCode": "omit_local_variable_types",
+     "file": "lib/src/diffutil_impl.dart",
+     "line": 175,
+     "col": 5,
+     "length": 26,
+     "description": "Omit type annotations for local variables."
+    },
+    {
+     "severity": "INFO",
+     "errorType": "LINT",
+     "errorCode": "omit_local_variable_types",
+     "file": "lib/src/diffutil_impl.dart",
+     "line": 177,
+     "col": 10,
+     "length": 27,
+     "description": "Omit type annotations for local variables."
+    },
+    {
+     "severity": "INFO",
+     "errorType": "LINT",
+     "errorCode": "omit_local_variable_types",
+     "file": "lib/src/diffutil_impl.dart",
+     "line": 178,
+     "col": 7,
+     "length": 32,
+     "description": "Omit type annotations for local variables."
+    },
+    {
+     "severity": "INFO",
+     "errorType": "LINT",
+     "errorCode": "omit_local_variable_types",
+     "file": "lib/src/diffutil_impl.dart",
+     "line": 179,
+     "col": 7,
+     "length": 37,
+     "description": "Omit type annotations for local variables."
+    },
+    {
+     "severity": "INFO",
+     "errorType": "LINT",
+     "errorCode": "omit_local_variable_types",
+     "file": "lib/src/diffutil_impl.dart",
+     "line": 180,
+     "col": 7,
+     "length": 37,
+     "description": "Omit type annotations for local variables."
+    },
+    {
+     "severity": "INFO",
+     "errorType": "LINT",
+     "errorCode": "omit_local_variable_types",
+     "file": "lib/src/diffutil_impl.dart",
+     "line": 194,
+     "col": 12,
+     "length": 9,
+     "description": "Omit type annotations for local variables."
+    },
+    {
+     "severity": "INFO",
+     "errorType": "LINT",
+     "errorCode": "omit_local_variable_types",
+     "file": "lib/src/diffutil_impl.dart",
+     "line": 196,
+     "col": 9,
+     "length": 34,
+     "description": "Omit type annotations for local variables."
+    },
+    {
+     "severity": "INFO",
+     "errorType": "LINT",
+     "errorCode": "omit_local_variable_types",
+     "file": "lib/src/diffutil_impl.dart",
+     "line": 197,
+     "col": 9,
+     "length": 34,
+     "description": "Omit type annotations for local variables."
+    },
+    {
+     "severity": "INFO",
+     "errorType": "LINT",
+     "errorCode": "omit_local_variable_types",
+     "file": "lib/src/diffutil_impl.dart",
+     "line": 198,
+     "col": 9,
+     "length": 86,
+     "description": "Omit type annotations for local variables."
+    },
+    {
+     "severity": "INFO",
+     "errorType": "LINT",
+     "errorCode": "omit_local_variable_types",
+     "file": "lib/src/diffutil_impl.dart",
+     "line": 200,
+     "col": 9,
+     "length": 64,
+     "description": "Omit type annotations for local variables."
+    },
+    {
+     "severity": "INFO",
+     "errorType": "LINT",
+     "errorCode": "omit_local_variable_types",
+     "file": "lib/src/diffutil_impl.dart",
+     "line": 251,
+     "col": 10,
+     "length": 18,
+     "description": "Omit type annotations for local variables."
+    },
+    {
+     "severity": "INFO",
+     "errorType": "LINT",
+     "errorCode": "omit_local_variable_types",
+     "file": "lib/src/diffutil_impl.dart",
+     "line": 252,
+     "col": 7,
+     "length": 32,
+     "description": "Omit type annotations for local variables."
+    },
+    {
+     "severity": "INFO",
+     "errorType": "LINT",
+     "errorCode": "omit_local_variable_types",
+     "file": "lib/src/diffutil_impl.dart",
+     "line": 253,
+     "col": 7,
+     "length": 37,
+     "description": "Omit type annotations for local variables."
+    },
+    {
+     "severity": "INFO",
+     "errorType": "LINT",
+     "errorCode": "omit_local_variable_types",
+     "file": "lib/src/diffutil_impl.dart",
+     "line": 254,
+     "col": 7,
+     "length": 37,
+     "description": "Omit type annotations for local variables."
+    },
+    {
+     "severity": "INFO",
+     "errorType": "LINT",
+     "errorCode": "omit_local_variable_types",
+     "file": "lib/src/diffutil_impl.dart",
+     "line": 257,
+     "col": 14,
+     "length": 18,
+     "description": "Omit type annotations for local variables."
+    },
+    {
+     "severity": "INFO",
+     "errorType": "LINT",
+     "errorCode": "omit_local_variable_types",
+     "file": "lib/src/diffutil_impl.dart",
+     "line": 260,
+     "col": 13,
+     "length": 66,
+     "description": "Omit type annotations for local variables."
+    },
+    {
+     "severity": "INFO",
+     "errorType": "LINT",
+     "errorCode": "omit_local_variable_types",
+     "file": "lib/src/diffutil_impl.dart",
+     "line": 261,
+     "col": 13,
+     "length": 92,
+     "description": "Omit type annotations for local variables."
+    },
+    {
+     "severity": "INFO",
+     "errorType": "LINT",
+     "errorCode": "omit_local_variable_types",
+     "file": "lib/src/diffutil_impl.dart",
+     "line": 270,
+     "col": 14,
+     "length": 18,
+     "description": "Omit type annotations for local variables."
+    },
+    {
+     "severity": "INFO",
+     "errorType": "LINT",
+     "errorCode": "omit_local_variable_types",
+     "file": "lib/src/diffutil_impl.dart",
+     "line": 273,
+     "col": 13,
+     "length": 66,
+     "description": "Omit type annotations for local variables."
+    },
+    {
+     "severity": "INFO",
+     "errorType": "LINT",
+     "errorCode": "omit_local_variable_types",
+     "file": "lib/src/diffutil_impl.dart",
+     "line": 274,
+     "col": 13,
+     "length": 92,
+     "description": "Omit type annotations for local variables."
+    },
+    {
+     "severity": "INFO",
+     "errorType": "LINT",
+     "errorCode": "prefer_single_quotes",
+     "file": "lib/src/diffutil_impl.dart",
+     "line": 297,
+     "col": 15,
+     "length": 37,
+     "description": "Only use double quotes for strings containing single quotes."
+    },
+    {
+     "severity": "INFO",
+     "errorType": "LINT",
+     "errorCode": "omit_local_variable_types",
+     "file": "lib/src/diffutil_impl.dart",
+     "line": 311,
+     "col": 5,
+     "length": 50,
+     "description": "Omit type annotations for local variables."
+    },
+    {
+     "severity": "INFO",
+     "errorType": "LINT",
+     "errorCode": "omit_local_variable_types",
+     "file": "lib/src/diffutil_impl.dart",
+     "line": 312,
+     "col": 5,
+     "length": 26,
+     "description": "Omit type annotations for local variables."
+    },
+    {
+     "severity": "INFO",
+     "errorType": "LINT",
+     "errorCode": "omit_local_variable_types",
+     "file": "lib/src/diffutil_impl.dart",
+     "line": 313,
+     "col": 5,
+     "length": 26,
+     "description": "Omit type annotations for local variables."
+    },
+    {
+     "severity": "INFO",
+     "errorType": "LINT",
+     "errorCode": "omit_local_variable_types",
+     "file": "lib/src/diffutil_impl.dart",
+     "line": 314,
+     "col": 10,
+     "length": 36,
+     "description": "Omit type annotations for local variables."
+    },
+    {
+     "severity": "INFO",
+     "errorType": "LINT",
+     "errorCode": "omit_local_variable_types",
+     "file": "lib/src/diffutil_impl.dart",
+     "line": 315,
+     "col": 7,
+     "length": 41,
+     "description": "Omit type annotations for local variables."
+    },
+    {
+     "severity": "INFO",
+     "errorType": "LINT",
+     "errorCode": "omit_local_variable_types",
+     "file": "lib/src/diffutil_impl.dart",
+     "line": 316,
+     "col": 7,
+     "length": 32,
+     "description": "Omit type annotations for local variables."
+    },
+    {
+     "severity": "INFO",
+     "errorType": "LINT",
+     "errorCode": "omit_local_variable_types",
+     "file": "lib/src/diffutil_impl.dart",
+     "line": 317,
+     "col": 7,
+     "length": 36,
+     "description": "Omit type annotations for local variables."
+    },
+    {
+     "severity": "INFO",
+     "errorType": "LINT",
+     "errorCode": "omit_local_variable_types",
+     "file": "lib/src/diffutil_impl.dart",
+     "line": 318,
+     "col": 7,
+     "length": 36,
+     "description": "Omit type annotations for local variables."
+    },
+    {
+     "severity": "INFO",
+     "errorType": "LINT",
+     "errorCode": "omit_local_variable_types",
+     "file": "lib/src/diffutil_impl.dart",
+     "line": 327,
+     "col": 12,
+     "length": 21,
+     "description": "Omit type annotations for local variables."
+    },
+    {
+     "severity": "INFO",
+     "errorType": "LINT",
+     "errorCode": "omit_local_variable_types",
+     "file": "lib/src/diffutil_impl.dart",
+     "line": 343,
+     "col": 5,
+     "length": 50,
+     "description": "Omit type annotations for local variables."
+    },
+    {
+     "severity": "INFO",
+     "errorType": "LINT",
+     "errorCode": "omit_local_variable_types",
+     "file": "lib/src/diffutil_impl.dart",
+     "line": 344,
+     "col": 5,
+     "length": 26,
+     "description": "Omit type annotations for local variables."
+    },
+    {
+     "severity": "INFO",
+     "errorType": "LINT",
+     "errorCode": "omit_local_variable_types",
+     "file": "lib/src/diffutil_impl.dart",
+     "line": 345,
+     "col": 5,
+     "length": 26,
+     "description": "Omit type annotations for local variables."
+    },
+    {
+     "severity": "INFO",
+     "errorType": "LINT",
+     "errorCode": "omit_local_variable_types",
+     "file": "lib/src/diffutil_impl.dart",
+     "line": 346,
+     "col": 10,
+     "length": 36,
+     "description": "Omit type annotations for local variables."
+    },
+    {
+     "severity": "INFO",
+     "errorType": "LINT",
+     "errorCode": "omit_local_variable_types",
+     "file": "lib/src/diffutil_impl.dart",
+     "line": 347,
+     "col": 7,
+     "length": 41,
+     "description": "Omit type annotations for local variables."
+    },
+    {
+     "severity": "INFO",
+     "errorType": "LINT",
+     "errorCode": "omit_local_variable_types",
+     "file": "lib/src/diffutil_impl.dart",
+     "line": 348,
+     "col": 7,
+     "length": 32,
+     "description": "Omit type annotations for local variables."
+    },
+    {
+     "severity": "INFO",
+     "errorType": "LINT",
+     "errorCode": "omit_local_variable_types",
+     "file": "lib/src/diffutil_impl.dart",
+     "line": 349,
+     "col": 7,
+     "length": 36,
+     "description": "Omit type annotations for local variables."
+    },
+    {
+     "severity": "INFO",
+     "errorType": "LINT",
+     "errorCode": "omit_local_variable_types",
+     "file": "lib/src/diffutil_impl.dart",
+     "line": 350,
+     "col": 7,
+     "length": 36,
+     "description": "Omit type annotations for local variables."
+    },
+    {
+     "severity": "INFO",
+     "errorType": "LINT",
+     "errorCode": "omit_local_variable_types",
+     "file": "lib/src/diffutil_impl.dart",
+     "line": 359,
+     "col": 12,
+     "length": 21,
+     "description": "Omit type annotations for local variables."
+    },
+    {
+     "severity": "INFO",
+     "errorType": "LINT",
+     "errorCode": "omit_local_variable_types",
+     "file": "lib/src/diffutil_impl.dart",
+     "line": 374,
+     "col": 10,
+     "length": 26,
+     "description": "Omit type annotations for local variables."
+    },
+    {
+     "severity": "INFO",
+     "errorType": "LINT",
+     "errorCode": "omit_local_variable_types",
+     "file": "lib/src/diffutil_impl.dart",
+     "line": 375,
+     "col": 7,
+     "length": 42,
+     "description": "Omit type annotations for local variables."
+    },
+    {
+     "severity": "INFO",
+     "errorType": "LINT",
+     "errorCode": "omit_local_variable_types",
+     "file": "lib/src/diffutil_impl.dart",
+     "line": 378,
+     "col": 14,
+     "length": 9,
+     "description": "Omit type annotations for local variables."
+    },
+    {
+     "severity": "INFO",
+     "errorType": "LINT",
+     "errorCode": "omit_local_variable_types",
+     "file": "lib/src/diffutil_impl.dart",
+     "line": 399,
+     "col": 10,
+     "length": 17,
+     "description": "Omit type annotations for local variables."
+    },
+    {
+     "severity": "INFO",
+     "errorType": "LINT",
+     "errorCode": "omit_local_variable_types",
+     "file": "lib/src/diffutil_impl.dart",
+     "line": 400,
+     "col": 7,
+     "length": 65,
+     "description": "Omit type annotations for local variables."
+    },
+    {
+     "severity": "INFO",
+     "errorType": "LINT",
+     "errorCode": "omit_local_variable_types",
+     "file": "lib/src/diffutil_impl.dart",
+     "line": 404,
+     "col": 16,
+     "length": 16,
+     "description": "Omit type annotations for local variables."
+    },
+    {
+     "severity": "INFO",
+     "errorType": "LINT",
+     "errorCode": "omit_local_variable_types",
+     "file": "lib/src/diffutil_impl.dart",
+     "line": 410,
+     "col": 11,
+     "length": 65,
+     "description": "Omit type annotations for local variables."
+    },
+    {
+     "severity": "INFO",
+     "errorType": "LINT",
+     "errorCode": "omit_local_variable_types",
+     "file": "lib/src/diffutil_impl.dart",
+     "line": 411,
+     "col": 11,
+     "length": 97,
+     "description": "Omit type annotations for local variables."
+    },
+    {
+     "severity": "INFO",
+     "errorType": "LINT",
+     "errorCode": "prefer_single_quotes",
+     "file": "lib/src/diffutil_impl.dart",
+     "line": 429,
+     "col": 28,
+     "length": 51,
+     "description": "Only use double quotes for strings containing single quotes."
+    },
+    {
+     "severity": "INFO",
+     "errorType": "LINT",
+     "errorCode": "omit_local_variable_types",
+     "file": "lib/src/diffutil_impl.dart",
+     "line": 445,
+     "col": 10,
+     "length": 17,
+     "description": "Omit type annotations for local variables."
+    },
+    {
+     "severity": "INFO",
+     "errorType": "LINT",
+     "errorCode": "omit_local_variable_types",
+     "file": "lib/src/diffutil_impl.dart",
+     "line": 446,
+     "col": 7,
+     "length": 65,
+     "description": "Omit type annotations for local variables."
+    },
+    {
+     "severity": "INFO",
+     "errorType": "LINT",
+     "errorCode": "omit_local_variable_types",
+     "file": "lib/src/diffutil_impl.dart",
+     "line": 450,
+     "col": 16,
+     "length": 16,
+     "description": "Omit type annotations for local variables."
+    },
+    {
+     "severity": "INFO",
+     "errorType": "LINT",
+     "errorCode": "omit_local_variable_types",
+     "file": "lib/src/diffutil_impl.dart",
+     "line": 456,
+     "col": 11,
+     "length": 65,
+     "description": "Omit type annotations for local variables."
+    },
+    {
+     "severity": "INFO",
+     "errorType": "LINT",
+     "errorCode": "omit_local_variable_types",
+     "file": "lib/src/diffutil_impl.dart",
+     "line": 457,
+     "col": 11,
+     "length": 98,
+     "description": "Omit type annotations for local variables."
+    },
+    {
+     "severity": "INFO",
+     "errorType": "LINT",
+     "errorCode": "prefer_single_quotes",
+     "file": "lib/src/diffutil_impl.dart",
+     "line": 477,
+     "col": 15,
+     "length": 52,
+     "description": "Only use double quotes for strings containing single quotes."
+    },
+    {
+     "severity": "INFO",
+     "errorType": "LINT",
+     "errorCode": "omit_local_variable_types",
+     "file": "lib/src/diffutil_impl.dart",
+     "line": 493,
+     "col": 10,
+     "length": 17,
+     "description": "Omit type annotations for local variables."
+    },
+    {
+     "severity": "INFO",
+     "errorType": "LINT",
+     "errorCode": "omit_local_variable_types",
+     "file": "lib/src/diffutil_impl.dart",
+     "line": 494,
+     "col": 7,
+     "length": 65,
+     "description": "Omit type annotations for local variables."
+    },
+    {
+     "severity": "INFO",
+     "errorType": "LINT",
+     "errorCode": "omit_local_variable_types",
+     "file": "lib/src/diffutil_impl.dart",
+     "line": 498,
+     "col": 16,
+     "length": 16,
+     "description": "Omit type annotations for local variables."
+    },
+    {
+     "severity": "INFO",
+     "errorType": "LINT",
+     "errorCode": "omit_local_variable_types",
+     "file": "lib/src/diffutil_impl.dart",
+     "line": 504,
+     "col": 11,
+     "length": 65,
+     "description": "Omit type annotations for local variables."
+    },
+    {
+     "severity": "INFO",
+     "errorType": "LINT",
+     "errorCode": "omit_local_variable_types",
+     "file": "lib/src/diffutil_impl.dart",
+     "line": 505,
+     "col": 11,
+     "length": 98,
+     "description": "Omit type annotations for local variables."
+    },
+    {
+     "severity": "INFO",
+     "errorType": "LINT",
+     "errorCode": "prefer_single_quotes",
+     "file": "lib/src/diffutil_impl.dart",
+     "line": 527,
+     "col": 15,
+     "length": 52,
+     "description": "Only use double quotes for strings containing single quotes."
+    },
+    {
+     "severity": "INFO",
+     "errorType": "LINT",
+     "errorCode": "omit_local_variable_types",
+     "file": "lib/src/diffutil_impl.dart",
+     "line": 538,
+     "col": 10,
+     "length": 17,
+     "description": "Omit type annotations for local variables."
+    },
+    {
+     "severity": "INFO",
+     "errorType": "LINT",
+     "errorCode": "omit_local_variable_types",
+     "file": "lib/src/diffutil_impl.dart",
+     "line": 539,
+     "col": 7,
+     "length": 65,
+     "description": "Omit type annotations for local variables."
+    },
+    {
+     "severity": "INFO",
+     "errorType": "LINT",
+     "errorCode": "omit_local_variable_types",
+     "file": "lib/src/diffutil_impl.dart",
+     "line": 543,
+     "col": 16,
+     "length": 16,
+     "description": "Omit type annotations for local variables."
+    },
+    {
+     "severity": "INFO",
+     "errorType": "LINT",
+     "errorCode": "omit_local_variable_types",
+     "file": "lib/src/diffutil_impl.dart",
+     "line": 549,
+     "col": 11,
+     "length": 65,
+     "description": "Omit type annotations for local variables."
+    },
+    {
+     "severity": "INFO",
+     "errorType": "LINT",
+     "errorCode": "omit_local_variable_types",
+     "file": "lib/src/diffutil_impl.dart",
+     "line": 550,
+     "col": 11,
+     "length": 97,
+     "description": "Omit type annotations for local variables."
+    },
+    {
+     "severity": "INFO",
+     "errorType": "LINT",
+     "errorCode": "prefer_single_quotes",
+     "file": "lib/src/diffutil_impl.dart",
+     "line": 568,
+     "col": 28,
+     "length": 51,
+     "description": "Only use double quotes for strings containing single quotes."
+    },
+    {
+     "severity": "INFO",
+     "errorType": "LINT",
+     "errorCode": "annotate_overrides",
+     "file": "lib/src/diffutil_impl.dart",
+     "line": 668,
+     "col": 8,
+     "length": 10,
+     "description": "Annotate overridden members."
+    },
+    {
+     "severity": "INFO",
+     "errorType": "LINT",
+     "errorCode": "annotate_overrides",
+     "file": "lib/src/diffutil_impl.dart",
+     "line": 682,
+     "col": 8,
+     "length": 9,
+     "description": "Annotate overridden members."
+    },
+    {
+     "severity": "INFO",
+     "errorType": "LINT",
+     "errorCode": "annotate_overrides",
+     "file": "lib/src/diffutil_impl.dart",
+     "line": 696,
+     "col": 8,
+     "length": 7,
+     "description": "Annotate overridden members."
+    },
+    {
+     "severity": "INFO",
+     "errorType": "LINT",
+     "errorCode": "annotate_overrides",
+     "file": "lib/src/diffutil_impl.dart",
+     "line": 701,
+     "col": 8,
+     "length": 9,
+     "description": "Annotate overridden members."
+    },
+    {
+     "severity": "INFO",
+     "errorType": "LINT",
+     "errorCode": "omit_local_variable_types",
+     "file": "lib/src/diffutil_impl.dart",
+     "line": 707,
+     "col": 7,
+     "length": 60,
+     "description": "Omit type annotations for local variables."
+    },
+    {
+     "severity": "INFO",
+     "errorType": "LINT",
+     "errorCode": "omit_local_variable_types",
+     "file": "lib/src/diffutil_impl.dart",
+     "line": 735,
+     "col": 3,
+     "length": 39,
+     "description": "Omit type annotations for local variables."
+    },
+    {
+     "severity": "INFO",
+     "errorType": "LINT",
+     "errorCode": "omit_local_variable_types",
+     "file": "lib/src/diffutil_impl.dart",
+     "line": 736,
+     "col": 3,
+     "length": 39,
+     "description": "Omit type annotations for local variables."
+    },
+    {
+     "severity": "INFO",
+     "errorType": "LINT",
+     "errorCode": "omit_local_variable_types",
+     "file": "lib/src/diffutil_impl.dart",
+     "line": 737,
+     "col": 3,
+     "length": 30,
+     "description": "Omit type annotations for local variables."
+    },
+    {
+     "severity": "INFO",
+     "errorType": "LINT",
+     "errorCode": "omit_local_variable_types",
+     "file": "lib/src/diffutil_impl.dart",
+     "line": 740,
+     "col": 3,
+     "length": 29,
+     "description": "Omit type annotations for local variables."
+    },
+    {
+     "severity": "INFO",
+     "errorType": "LINT",
+     "errorCode": "omit_local_variable_types",
+     "file": "lib/src/diffutil_impl.dart",
+     "line": 746,
+     "col": 3,
+     "length": 61,
+     "description": "Omit type annotations for local variables."
+    },
+    {
+     "severity": "INFO",
+     "errorType": "LINT",
+     "errorCode": "omit_local_variable_types",
+     "file": "lib/src/diffutil_impl.dart",
+     "line": 753,
+     "col": 3,
+     "length": 33,
+     "description": "Omit type annotations for local variables."
+    },
+    {
+     "severity": "INFO",
+     "errorType": "LINT",
+     "errorCode": "omit_local_variable_types",
+     "file": "lib/src/diffutil_impl.dart",
+     "line": 755,
+     "col": 5,
+     "length": 39,
+     "description": "Omit type annotations for local variables."
+    },
+    {
+     "severity": "INFO",
+     "errorType": "LINT",
+     "errorCode": "omit_local_variable_types",
+     "file": "lib/src/diffutil_impl.dart",
+     "line": 756,
+     "col": 5,
+     "length": 145,
+     "description": "Omit type annotations for local variables."
+    },
+    {
+     "severity": "INFO",
+     "errorType": "LINT",
+     "errorCode": "omit_local_variable_types",
+     "file": "lib/src/diffutil_impl.dart",
+     "line": 766,
+     "col": 7,
+     "length": 73,
+     "description": "Omit type annotations for local variables."
+    },
+    {
+     "severity": "INFO",
+     "errorType": "LINT",
+     "errorCode": "omit_local_variable_types",
+     "file": "lib/src/diffutil_impl.dart",
+     "line": 784,
+     "col": 7,
+     "length": 26,
+     "description": "Omit type annotations for local variables."
+    },
+    {
+     "severity": "INFO",
+     "errorType": "LINT",
+     "errorCode": "omit_local_variable_types",
+     "file": "lib/src/diffutil_impl.dart",
+     "line": 809,
+     "col": 3,
+     "length": 37,
+     "description": "Omit type annotations for local variables."
+    },
+    {
+     "severity": "INFO",
+     "errorType": "LINT",
+     "errorCode": "omit_local_variable_types",
+     "file": "lib/src/diffutil_impl.dart",
+     "line": 810,
+     "col": 3,
+     "length": 37,
+     "description": "Omit type annotations for local variables."
+    },
+    {
+     "severity": "INFO",
+     "errorType": "LINT",
+     "errorCode": "omit_local_variable_types",
+     "file": "lib/src/diffutil_impl.dart",
+     "line": 814,
+     "col": 3,
+     "length": 35,
+     "description": "Omit type annotations for local variables."
+    },
+    {
+     "severity": "INFO",
+     "errorType": "LINT",
+     "errorCode": "omit_local_variable_types",
+     "file": "lib/src/diffutil_impl.dart",
+     "line": 815,
+     "col": 3,
+     "length": 47,
+     "description": "Omit type annotations for local variables."
+    },
+    {
+     "severity": "INFO",
+     "errorType": "LINT",
+     "errorCode": "omit_local_variable_types",
+     "file": "lib/src/diffutil_impl.dart",
+     "line": 820,
+     "col": 3,
+     "length": 38,
+     "description": "Omit type annotations for local variables."
+    },
+    {
+     "severity": "INFO",
+     "errorType": "LINT",
+     "errorCode": "omit_local_variable_types",
+     "file": "lib/src/diffutil_impl.dart",
+     "line": 821,
+     "col": 8,
+     "length": 9,
+     "description": "Omit type annotations for local variables."
+    },
+    {
+     "severity": "INFO",
+     "errorType": "LINT",
+     "errorCode": "omit_local_variable_types",
+     "file": "lib/src/diffutil_impl.dart",
+     "line": 822,
+     "col": 10,
+     "length": 10,
+     "description": "Omit type annotations for local variables."
+    },
+    {
+     "severity": "INFO",
+     "errorType": "LINT",
+     "errorCode": "omit_local_variable_types",
+     "file": "lib/src/diffutil_impl.dart",
+     "line": 836,
+     "col": 7,
+     "length": 13,
+     "description": "Omit type annotations for local variables."
+    },
+    {
+     "severity": "INFO",
+     "errorType": "LINT",
+     "errorCode": "omit_local_variable_types",
+     "file": "lib/src/diffutil_impl.dart",
+     "line": 847,
+     "col": 11,
+     "length": 32,
+     "description": "Omit type annotations for local variables."
+    },
+    {
+     "severity": "INFO",
+     "errorType": "LINT",
+     "errorCode": "omit_local_variable_types",
+     "file": "lib/src/diffutil_impl.dart",
+     "line": 857,
+     "col": 10,
+     "length": 10,
+     "description": "Omit type annotations for local variables."
+    },
+    {
+     "severity": "INFO",
+     "errorType": "LINT",
+     "errorCode": "omit_local_variable_types",
+     "file": "lib/src/diffutil_impl.dart",
+     "line": 859,
+     "col": 7,
+     "length": 31,
+     "description": "Omit type annotations for local variables."
+    },
+    {
+     "severity": "INFO",
+     "errorType": "LINT",
+     "errorCode": "omit_local_variable_types",
+     "file": "lib/src/diffutil_impl.dart",
+     "line": 873,
+     "col": 7,
+     "length": 21,
+     "description": "Omit type annotations for local variables."
+    },
+    {
+     "severity": "INFO",
+     "errorType": "LINT",
+     "errorCode": "prefer_single_quotes",
+     "file": "lib/src/diffutil_impl.dart",
+     "line": 896,
+     "col": 20,
+     "length": 59,
+     "description": "Only use double quotes for strings containing single quotes."
+    },
+    {
+     "severity": "INFO",
+     "errorType": "LINT",
+     "errorCode": "prefer_adjacent_string_concatenation",
+     "file": "lib/src/diffutil_impl.dart",
+     "line": 896,
+     "col": 80,
+     "length": 1,
+     "description": "Use adjacent strings to concatenate string literals."
+    },
+    {
+     "severity": "INFO",
+     "errorType": "LINT",
+     "errorCode": "prefer_single_quotes",
+     "file": "lib/src/diffutil_impl.dart",
+     "line": 897,
+     "col": 7,
+     "length": 74,
+     "description": "Only use double quotes for strings containing single quotes."
+    },
+    {
+     "severity": "INFO",
+     "errorType": "LINT",
+     "errorCode": "prefer_single_quotes",
+     "file": "lib/src/diffutil_impl.dart",
+     "line": 898,
+     "col": 7,
+     "length": 20,
+     "description": "Only use double quotes for strings containing single quotes."
+    }
+   ]
+  },
+  "lib/src/model/diffupdate.dart": {
+   "uri": "package:diffutil_dart/src/model/diffupdate.dart",
+   "size": 4236,
+   "isFormatted": true,
+   "codeProblems": [
+    {
+     "severity": "INFO",
+     "errorType": "LINT",
+     "errorCode": "annotate_overrides",
+     "file": "lib/src/model/diffupdate.dart",
+     "line": 32,
+     "col": 13,
+     "length": 8,
+     "description": "Annotate overridden members."
+    },
+    {
+     "severity": "INFO",
+     "errorType": "LINT",
+     "errorCode": "annotate_overrides",
+     "file": "lib/src/model/diffupdate.dart",
+     "line": 33,
+     "col": 13,
+     "length": 5,
+     "description": "Annotate overridden members."
+    },
+    {
+     "severity": "INFO",
+     "errorType": "LINT",
+     "errorCode": "always_require_non_null_named_parameters",
+     "file": "lib/src/model/diffupdate.dart",
+     "line": 35,
+     "col": 22,
+     "length": 8,
+     "description": "Specify `@required` on named parameters without defaults."
+    },
+    {
+     "severity": "INFO",
+     "errorType": "LINT",
+     "errorCode": "always_require_non_null_named_parameters",
+     "file": "lib/src/model/diffupdate.dart",
+     "line": 35,
+     "col": 37,
+     "length": 5,
+     "description": "Specify `@required` on named parameters without defaults."
+    },
+    {
+     "severity": "INFO",
+     "errorType": "LINT",
+     "errorCode": "annotate_overrides",
+     "file": "lib/src/model/diffupdate.dart",
+     "line": 66,
+     "col": 13,
+     "length": 8,
+     "description": "Annotate overridden members."
+    },
+    {
+     "severity": "INFO",
+     "errorType": "LINT",
+     "errorCode": "annotate_overrides",
+     "file": "lib/src/model/diffupdate.dart",
+     "line": 67,
+     "col": 13,
+     "length": 5,
+     "description": "Annotate overridden members."
+    },
+    {
+     "severity": "INFO",
+     "errorType": "LINT",
+     "errorCode": "always_require_non_null_named_parameters",
+     "file": "lib/src/model/diffupdate.dart",
+     "line": 69,
+     "col": 22,
+     "length": 8,
+     "description": "Specify `@required` on named parameters without defaults."
+    },
+    {
+     "severity": "INFO",
+     "errorType": "LINT",
+     "errorCode": "always_require_non_null_named_parameters",
+     "file": "lib/src/model/diffupdate.dart",
+     "line": 69,
+     "col": 37,
+     "length": 5,
+     "description": "Specify `@required` on named parameters without defaults."
+    },
+    {
+     "severity": "INFO",
+     "errorType": "LINT",
+     "errorCode": "always_require_non_null_named_parameters",
+     "file": "lib/src/model/diffupdate.dart",
+     "line": 103,
+     "col": 22,
+     "length": 8,
+     "description": "Specify `@required` on named parameters without defaults."
+    },
+    {
+     "severity": "INFO",
+     "errorType": "LINT",
+     "errorCode": "always_require_non_null_named_parameters",
+     "file": "lib/src/model/diffupdate.dart",
+     "line": 135,
+     "col": 20,
+     "length": 4,
+     "description": "Specify `@required` on named parameters without defaults."
+    },
+    {
+     "severity": "INFO",
+     "errorType": "LINT",
+     "errorCode": "always_require_non_null_named_parameters",
+     "file": "lib/src/model/diffupdate.dart",
+     "line": 135,
+     "col": 31,
+     "length": 2,
+     "description": "Specify `@required` on named parameters without defaults."
+    }
+   ]
+  }
+ },
+ "stats": {
+  "analyzeProcessElapsed": 3303,
+  "formatProcessElapsed": 539,
+  "resolveProcessElapsed": 260,
+  "totalElapsed": 9014
+ },
+ "tags": [
+  "sdk:dart",
+  "sdk:flutter",
+  "platform:android",
+  "platform:ios",
+  "platform:windows",
+  "platform:linux",
+  "platform:macos",
+  "platform:web",
+  "runtime:native-aot",
+  "runtime:native-jit",
+  "runtime:web"
+ ],
+ "report": {
+  "sections": [
+   {
+    "title": "Follow Dart file conventions",
+    "grantedPoints": 20,
+    "maxPoints": 20,
+    "summary": "### [*] 10/10 points: Provide a valid `pubspec.yaml`\n\n\n### [*] 5/5 points: Provide a valid `README.md`\n\n\n### [*] 5/5 points: Provide a valid `CHANGELOG.md`\n"
+   },
+   {
+    "title": "Provide documentation",
+    "grantedPoints": 10,
+    "maxPoints": 10,
+    "summary": "### [*] 10/10 points: Package has an example\n\n* Found example at: `example/main.dart`"
+   },
+   {
+    "title": "Support multiple platforms",
+    "grantedPoints": 20,
+    "maxPoints": 20,
+    "summary": "### [*] 20/20 points: Supports 2 of 2 possible platforms (**native**, **js**)\n"
+   },
+   {
+    "title": "Pass static analysis",
+    "grantedPoints": 20,
+    "maxPoints": 30,
+    "summary": "### [~] 20/30 points: code has no errors, warnings, lints, or formatting issues\n\nFound 111 issues. Showing the first 2:\n\n<details>\n<summary>\nINFO: Omit type annotations for local variables.\n</summary>\n\n`lib/src/diffutil_impl.dart:49:3`\n\n```\n   ╷\n49 │   final int cmpX = o1.x - o2.x;\n   │   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n   ╵\n```\n\nTo reproduce make sure you are using [pedantic](https://pub.dev/packages/pedantic#using-the-lints) and run `dartanalyzer lib/src/diffutil_impl.dart`\n</details>\n<details>\n<summary>\nINFO: Omit type annotations for local variables.\n</summary>\n\n`lib/src/diffutil_impl.dart:155:5`\n\n```\n    ╷\n155 │     final _Snake firstSnake = _mSnakes.isEmpty ? null : _mSnakes.first;\n    │     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n    ╵\n```\n\nTo reproduce make sure you are using [pedantic](https://pub.dev/packages/pedantic#using-the-lints) and run `dartanalyzer lib/src/diffutil_impl.dart`\n</details>"
+   },
+   {
+    "title": "Support up-to-date dependencies",
+    "grantedPoints": 20,
+    "maxPoints": 20,
+    "summary": "### [*] 10/10 points: All of the package dependencies are supported in the latest version\n\nNo dependencies.\n\nTo reproduce run `pub outdated --no-dev-dependencies --up-to-date --no-dependency-overrides`.\n\n\n### [*] 10/10 points: Package supports latest stable Dart and Flutter SDKs\n"
+   }
+  ]
+ }
+}

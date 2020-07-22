@@ -90,7 +90,6 @@ class ListDiffDelegate<T> implements DiffDelegate {
   int getOldListSize() => oldList.length;
 }
 
-
 /// can be used for custom list-like types, for example from built_collection or kt.dart
 class CustomListDiffDelegate<T, L> implements DiffDelegate {
   final L oldList;
