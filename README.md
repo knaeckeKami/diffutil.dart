@@ -73,7 +73,7 @@ instead of
 `[Insert(position: 0, count: 2)]`
 
 
-OR (deprecated)
+#### Using the result (legacy way)
 
 Implement `ListUpdateCallback` and call `diffResult.dispatchUpdatesTo(myCallback);`
 

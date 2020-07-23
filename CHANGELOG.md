@@ -1,11 +1,13 @@
-## 1.0.0-alpha
+
+## 1.0.0
 
 Major revamp to make the libary more Dart-y and less cumbersome to use!
 
 - Add ability to calculate the changeset as list of DiffUpdate object, where each object is of type Insert, Remove, Change or Insert
-- Deprecated the old way the get the changeset via ListUpdateCallback.
 - Ability to turn off changeset batching (See README for an explanation on changeset batching)
 - Improved the example
+
+- Deprecated the old way the get the changeset via ListUpdateCallback.
 
 ## 0.1.0+1
 
