@@ -1,3 +1,8 @@
+## 1.0.2
+
+- More tests, add github action badges
+
+
 ## 1.0.1
 
 - Relax version constraint of package meta
