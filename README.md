@@ -1,8 +1,8 @@
 # diffutil.dart
 
 [![Pub Package](https://img.shields.io/pub/v/diffutil_dart.svg)](https://pub.dartlang.org/packages/diffutil_dart)
-[![Build Status](https://github.com/knaeckeKami/diffutil/workflows/Build/badge.svg)](https://github.com/knaeckeKami/diffutil/actions)
-[![codecov](https://codecov.io/gh/knaeckeKami/diffutil/branch/master/graph/badge.svg)](https://codecov.io/gh/knaeckeKami/diffutil)
+[![Build Status](https://github.com/knaeckeKami/diffutil.dart/workflows/Build/badge.svg)](https://github.com/knaeckeKami/diffutil.dart/actions)
+[![codecov](https://codecov.io/gh/knaeckeKami/diffutil.dart/branch/master/graph/badge.svg)](https://codecov.io/gh/knaeckeKami/diffutil.dart)
 
 
 Calculate the difference between two lists.
