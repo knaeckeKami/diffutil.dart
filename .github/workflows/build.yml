@@ -1,0 +1,35 @@
+name: Build
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    container:
+      image: google/dart:dev
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Install dependencies
+      run: pub get
+
+    - name: Check format
+      run: dart format --set-exit-if-changed .
+    
+    - name: Analyze
+      run: dart analyze
+
+    - name: Run tests
+      run: pub run test
+
+    - name: Coverage
+      run: dart pub run test_coverage
+
+    - name: Upload coverage to codecov
+      run: curl -s https://codecov.io/bash | bash

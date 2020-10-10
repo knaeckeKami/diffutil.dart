@@ -1,6 +1,6 @@
 name: diffutil_dart
 description: Calculate the changeset between two lists. Used for implicitly animating Flutter lists without having to maintain a StatefulWidget.
-version: 1.0.0
+version: 1.0.1
 author: Martin Kamleithner
 homepage: https://github.com/knaeckeKami/diffutil.dart
 
@@ -9,7 +9,7 @@ environment:
 
 
 dependencies:
-  meta: ^1.2.2
+  meta: ^1.1.0
 
 
 dev_dependencies:

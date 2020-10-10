@@ -1,3 +1,6 @@
+## 1.0.1
+
+- Relax version constraint of package meta
 
 ## 1.0.0
 
