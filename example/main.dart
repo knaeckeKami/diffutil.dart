@@ -40,19 +40,21 @@ void main() {
 
   print("difference between $oldList2 and $newList2, with move detection:");
 
-  final listDiff3 =
-      diffutil.calculateListDiff(oldList2, newList2, detectMoves: true).getUpdates();
+  final listDiff3 = diffutil
+      .calculateListDiff(oldList2, newList2, detectMoves: true)
+      .getUpdates();
 
   print("changeset: $listDiff3");
 
   print("\n");
 
   final oldList3 = [];
-  final newList3 = [1,2,3];
+  final newList3 = [1, 2, 3];
 
   print("difference between $oldList3 and $newList3, batched:");
 
-  final listDiff4 = diffutil.calculateListDiff(oldList3, newList3).getUpdates(batch: true);
+  final listDiff4 =
+      diffutil.calculateListDiff(oldList3, newList3).getUpdates(batch: true);
 
   print("changeset: $listDiff4");
 
@@ -60,14 +62,12 @@ void main() {
 
   print("difference between $oldList3 and $newList3, unbatched:");
 
-  final listDiff5 = diffutil.calculateListDiff(oldList3, newList3).getUpdates(batch: false);
+  final listDiff5 =
+      diffutil.calculateListDiff(oldList3, newList3).getUpdates(batch: false);
 
   print("changeset: $listDiff5");
 
   print("\n");
-
-
-
 }
 
 // ignore: deprecated_member_use_from_same_package
