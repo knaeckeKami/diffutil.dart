@@ -162,7 +162,7 @@ void main() {
     final updates = diffutil.calculateCustomListDiff<int, List<int>>(
         [1, 2, 3], [2, 1, 4, 5],
         detectMoves: true,
-        getLength: (l) => l.length,
+        getLength: ((l) => l.length),
         getByIndex: (l, i) => l[i]).getUpdates();
 
     expect(updates, [
@@ -347,14 +347,14 @@ class DataObjectListDiffWithPayload
   }
 
   @override
-  Object getChangePayload(int oldItemPosition, int newItemPosition) {
+  Object? getChangePayload(int oldItemPosition, int newItemPosition) {
     return newList[newItemPosition].payload;
   }
 }
 
 class DataObject {
-  final int id;
-  final int payload;
+  final int? id;
+  final int? payload;
 
   DataObject({this.id, this.payload});
 
