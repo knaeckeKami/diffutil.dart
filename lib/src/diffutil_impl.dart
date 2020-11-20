@@ -1,4 +1,3 @@
-import 'dart:math' as math;
 import 'dart:math';
 import 'dart:typed_data';
 
@@ -37,7 +36,12 @@ class _Snake {
   ///
   bool reverse;
 
-  _Snake({this.x, this.y, this.size, this.removal, this.reverse});
+  _Snake(
+      {required this.x,
+      required this.y,
+      required this.size,
+      required this.removal,
+      required this.reverse});
 
   @override
   String toString() {
@@ -51,10 +55,10 @@ final Comparator<_Snake> _snakeComparator = (o1, o2) {
 };
 
 class _Range {
-  int oldListStart;
-  int oldListEnd;
-  int newListStart;
-  int newListEnd;
+  int? oldListStart;
+  int? oldListEnd;
+  int? newListStart;
+  int? newListEnd;
 
   _Range(
       {this.oldListStart, this.oldListEnd, this.newListStart, this.newListEnd});
@@ -171,20 +175,20 @@ class DiffResult {
   ///the updates (which is probably being called on the main thread).
   ///
   void _findMatchingItems() {
-    var posOld = _mOldListSize;
-    var posNew = _mNewListSize;
+    int? posOld = _mOldListSize;
+    int? posNew = _mNewListSize;
     // traverse the matrix from right bottom to 0,0.
     for (var i = _mSnakes.length - 1; i >= 0; i--) {
       final snake = _mSnakes[i];
       final endX = snake.x + snake.size;
       final endY = snake.y + snake.size;
       if (_mDetectMoves) {
-        while (posOld > endX) {
+        while (posOld! > endX) {
           // this is a removal. Check remaining snakes to see if this was added before
           _findAddition(posOld, posNew, i);
           posOld--;
         }
-        while (posNew > endY) {
+        while (posNew! > endY) {
           // this is an addition. Check remaining snakes to see if this was removed
           // before
           _findRemoval(posOld, posNew, i);
@@ -207,14 +211,14 @@ class DiffResult {
     }
   }
 
-  void _findAddition(int x, int y, int snakeIndex) {
+  void _findAddition(int x, int? y, int snakeIndex) {
     if (_mOldItemStatuses[x - 1] != 0) {
       return; // already set by a latter item
     }
     _findMatchingItem(x, y, snakeIndex, false);
   }
 
-  void _findRemoval(int x, int y, int snakeIndex) {
+  void _findRemoval(int? x, int y, int snakeIndex) {
     if (_mNewItemStatuses[y - 1] != 0) {
       return; // already set by a latter item
     }
@@ -234,16 +238,16 @@ class DiffResult {
   ///@return True if such item is found.
   ///
   bool _findMatchingItem(
-      final int x, final int y, final int snakeIndex, final bool removal) {
+      final int? x, final int? y, final int snakeIndex, final bool removal) {
     int myItemPos;
-    int curX;
-    int curY;
+    int? curX;
+    int? curY;
     if (removal) {
-      myItemPos = y - 1;
+      myItemPos = y! - 1;
       curX = x;
       curY = y - 1;
     } else {
-      myItemPos = x - 1;
+      myItemPos = x! - 1;
       curX = x - 1;
       curY = y;
     }
@@ -253,7 +257,7 @@ class DiffResult {
       final endY = snake.y + snake.size;
       if (removal) {
         // check removals for a match
-        for (var pos = curX - 1; pos >= endX; pos--) {
+        for (var pos = curX! - 1; pos >= endX; pos--) {
           if (_mCallback.areItemsTheSame(pos, myItemPos)) {
             // found!
             final isSame = _mCallback.areContentsTheSame(pos, myItemPos);
@@ -266,13 +270,13 @@ class DiffResult {
         }
       } else {
         // check for additions for a match
-        for (var pos = curY - 1; pos >= endY; pos--) {
+        for (var pos = curY! - 1; pos >= endY; pos--) {
           if (_mCallback.areItemsTheSame(myItemPos, pos)) {
             // found
             final isSame = _mCallback.areContentsTheSame(myItemPos, pos);
             final changeFlag =
                 isSame ? FLAG_MOVED_NOT_CHANGED : FLAG_MOVED_CHANGED;
-            _mOldItemStatuses[x - 1] = (pos << FLAG_OFFSET) | FLAG_IGNORE;
+            _mOldItemStatuses[x! - 1] = (pos << FLAG_OFFSET) | FLAG_IGNORE;
             _mNewItemStatuses[pos] = ((x - 1) << FLAG_OFFSET) | changeFlag;
             return true;
           }
@@ -284,75 +288,23 @@ class DiffResult {
     return false;
   }
 
-  ///
-  ///Dispatches update operations to the given Callback.
-  ///<p>
-  ///These updates are atomic such that the first update call effects every update call that
-  ///comes after it (the same as RecyclerView).*
-
-  ///@param updateCallback The callback to receive the update operations.
-  ///@see #dispatchUpdatesTo(RecyclerView.Adapter)
-  ///
-  @Deprecated('consider using getUpdates() instead')
-  void dispatchUpdatesTo(ListUpdateCallback updateCallback) {
-    BatchingListUpdateCallback batchingCallback;
-    if (updateCallback is BatchingListUpdateCallback) {
-      batchingCallback = updateCallback;
-    } else {
-      batchingCallback = BatchingListUpdateCallback(updateCallback);
-      // replace updateCallback with a batching callback and override references to
-      // updateCallback so that we don't call it directly by mistake
-      //noinspection UnusedAssignment
-      updateCallback = batchingCallback;
-    }
-    // These are add/remove ops that are converted to moves. We track their positions until
-    // their respective update operations are processed.
-    final postponedUpdates = <_PostponedUpdate>[];
-    var posOld = _mOldListSize;
-    var posNew = _mNewListSize;
-    for (var snakeIndex = _mSnakes.length - 1; snakeIndex >= 0; snakeIndex--) {
-      final snake = _mSnakes[snakeIndex];
-      final snakeSize = snake.size;
-      final endX = snake.x + snakeSize;
-      final endY = snake.y + snakeSize;
-      if (endX < posOld) {
-        _dispatchRemovals(
-            postponedUpdates, batchingCallback, endX, posOld - endX, endX);
-      }
-      if (endY < posNew) {
-        _dispatchAdditions(
-            postponedUpdates, batchingCallback, endX, posNew - endY, endY);
-      }
-      for (var i = snakeSize - 1; i >= 0; i--) {
-        if ((_mOldItemStatuses[snake.x + i] & FLAG_MASK) == FLAG_CHANGED) {
-          batchingCallback.onChanged(snake.x + i, 1,
-              _mCallback.getChangePayload(snake.x + i, snake.y + i));
-        }
-      }
-      posOld = snake.x;
-      posNew = snake.y;
-    }
-    batchingCallback.dispatchLastEvent();
-  }
-
   Iterable<DiffUpdate> getUpdates({bool batch = true}) {
     final updates = <DiffUpdate>[];
     // These are add/remove ops that are converted to moves. We track their positions until
     // their respective update operations are processed.
     final postponedUpdates = <_PostponedUpdate>[];
-    var posOld = _mOldListSize;
-    var posNew = _mNewListSize;
+    int? posOld = _mOldListSize;
+    int? posNew = _mNewListSize;
     for (var snakeIndex = _mSnakes.length - 1; snakeIndex >= 0; snakeIndex--) {
       final snake = _mSnakes[snakeIndex];
       final snakeSize = snake.size;
       final endX = snake.x + snakeSize;
       final endY = snake.y + snakeSize;
-      if (endX < posOld) {
-        _dispatchRemovals2(
-            postponedUpdates, updates, endX, posOld - endX, endX);
+      if (endX < posOld!) {
+        _dispatchRemovals(postponedUpdates, updates, endX, posOld - endX, endX);
       }
-      if (endY < posNew) {
-        _dispatchAdditions2(
+      if (endY < posNew!) {
+        _dispatchAdditions(
             postponedUpdates, updates, endX, posNew - endY, endY);
       }
       for (var i = snakeSize - 1; i >= 0; i--) {
@@ -368,7 +320,7 @@ class DiffResult {
     return batch ? updates.batch() : updates;
   }
 
-  static _PostponedUpdate _removePostponedUpdate(
+  static _PostponedUpdate? _removePostponedUpdate(
       List<_PostponedUpdate> updates, int pos, bool removal) {
     for (var i = updates.length - 1; i >= 0; i--) {
       final update = updates[i];
@@ -384,104 +336,12 @@ class DiffResult {
     return null;
   }
 
-  @deprecated
-  void _dispatchAdditions(
-      List<_PostponedUpdate> postponedUpdates,
-      ListUpdateCallback updateCallback,
-      int start,
-      int count,
-      int globalIndex) {
-    if (!_mDetectMoves) {
-      updateCallback.onInserted(start, count);
-      return;
-    }
-    for (var i = count - 1; i >= 0; i--) {
-      final status = _mNewItemStatuses[globalIndex + i] & FLAG_MASK;
-      switch (status) {
-        case 0: // real addition
-          updateCallback.onInserted(start, 1);
-          for (final update in postponedUpdates) {
-            update.currentPos += 1;
-          }
-          break;
-        case FLAG_MOVED_CHANGED:
-        case FLAG_MOVED_NOT_CHANGED:
-          final pos = _mNewItemStatuses[globalIndex + i] >> FLAG_OFFSET;
-          final update = _removePostponedUpdate(postponedUpdates, pos, true);
-          // the item was moved from that position
-          //noinspection ConstantConditions
-          updateCallback.onMoved(update.currentPos, start);
-          if (status == FLAG_MOVED_CHANGED) {
-            // also dispatch a change
-            updateCallback.onChanged(
-                start, 1, _mCallback.getChangePayload(pos, globalIndex + i));
-          }
-          break;
-        case FLAG_IGNORE: // ignoring this
-          postponedUpdates.add(_PostponedUpdate(
-              posInOwnerList: globalIndex + i,
-              currentPos: start,
-              removal: false));
-          break;
-        default:
-          throw StateError('unknown flag for pos ${globalIndex + i}:  $status');
-      }
-    }
-  }
-
-  @deprecated
-  void _dispatchRemovals(
-      List<_PostponedUpdate> postponedUpdates,
-      ListUpdateCallback updateCallback,
-      int start,
-      int count,
-      int globalIndex) {
-    if (!_mDetectMoves) {
-      updateCallback.onRemoved(start, count);
-      return;
-    }
-    for (var i = count - 1; i >= 0; i--) {
-      final status = _mOldItemStatuses[globalIndex + i] & FLAG_MASK;
-      switch (status) {
-        case 0: // real removal
-          updateCallback.onRemoved(start + i, 1);
-          for (final update in postponedUpdates) {
-            update.currentPos -= 1;
-          }
-          break;
-        case FLAG_MOVED_CHANGED:
-        case FLAG_MOVED_NOT_CHANGED:
-          final pos = _mOldItemStatuses[globalIndex + i] >> FLAG_OFFSET;
-          final update = _removePostponedUpdate(postponedUpdates, pos, false);
-          // the item was moved to that position. we do -1 because this is a move not
-          // add and removing current item offsets the target move by 1
-          //noinspection ConstantConditions
-          updateCallback.onMoved(start + i, update.currentPos - 1);
-          if (status == FLAG_MOVED_CHANGED) {
-            // also dispatch a change
-            updateCallback.onChanged(update.currentPos - 1, 1,
-                _mCallback.getChangePayload(globalIndex + i, pos));
-          }
-          break;
-        case FLAG_IGNORE: // ignoring this
-          postponedUpdates.add(_PostponedUpdate(
-              posInOwnerList: globalIndex + i,
-              currentPos: start + i,
-              removal: true));
-          break;
-        default:
-          throw StateError(
-              'unknown flag for pos  ${globalIndex + i}:  $status');
-      }
-    }
-  }
-
   @override
   String toString() {
     return 'DiffResult{mSnakes: $_mSnakes}, ';
   }
 
-  void _dispatchRemovals2(List<_PostponedUpdate> postponedUpdates,
+  void _dispatchRemovals(List<_PostponedUpdate> postponedUpdates,
       List<DiffUpdate> updates, int start, int count, int globalIndex) {
     if (!_mDetectMoves) {
       updates.add(DiffUpdate.remove(position: start, count: count));
@@ -499,7 +359,7 @@ class DiffResult {
         case FLAG_MOVED_CHANGED:
         case FLAG_MOVED_NOT_CHANGED:
           final pos = _mOldItemStatuses[globalIndex + i] >> FLAG_OFFSET;
-          final update = _removePostponedUpdate(postponedUpdates, pos, false);
+          final update = _removePostponedUpdate(postponedUpdates, pos, false)!;
           // the item was moved to that position. we do -1 because this is a move not
           // add and removing current item offsets the target move by 1
           //noinspection ConstantConditions
@@ -525,7 +385,7 @@ class DiffResult {
     }
   }
 
-  void _dispatchAdditions2(List<_PostponedUpdate> postponedUpdates,
+  void _dispatchAdditions(List<_PostponedUpdate> postponedUpdates,
       List<DiffUpdate> updates, int start, int count, int globalIndex) {
     if (!_mDetectMoves) {
       updates.add(DiffUpdate.insert(position: start, count: count));
@@ -543,7 +403,7 @@ class DiffResult {
         case FLAG_MOVED_CHANGED:
         case FLAG_MOVED_NOT_CHANGED:
           final pos = _mNewItemStatuses[globalIndex + i] >> FLAG_OFFSET;
-          final update = _removePostponedUpdate(postponedUpdates, pos, true);
+          final update = _removePostponedUpdate(postponedUpdates, pos, true)!;
           // the item was moved from that position
           updates.add(DiffUpdate.move(from: update.currentPos, to: start));
           if (status == FLAG_MOVED_CHANGED) {
@@ -571,150 +431,10 @@ class _PostponedUpdate {
   int currentPos;
   final bool removal;
 
-  _PostponedUpdate({this.posInOwnerList, this.currentPos, this.removal});
-}
-
-@deprecated
-abstract class ListUpdateCallback {
-  ///
-  ///Called when {@code count} number of items are inserted at the given position.
-  ///
-  ///@param position The position of the new item.
-  ///@param count    The number of items that have been added.
-  ///
-  void onInserted(int position, int count);
-
-  ///
-  ///Called when {@code count} number of items are removed from the given position.
-  ///
-  ///@param position The position of the item which has been removed.
-  ///@param count    The number of items which have been removed.
-  ///
-  void onRemoved(int position, int count);
-
-  ///
-  ///Called when an item changes its position in the list.
-  ///
-  ///@param fromPosition The previous position of the item before the move.
-  ///@param toPosition   The new position of the item.
-  ///
-  void onMoved(int fromPosition, int toPosition);
-
-  ///
-  ///Called when {@code count} number of items are updated at the given position.
-  ///
-  ///@param position The position of the item which has been updated.
-  ///@param count    The number of items which has changed.
-  ///
-  void onChanged(int position, int count, Object payload);
-}
-
-///
-// ignore: deprecated_member_use_from_same_package
-///Wraps a [ListUpdateCallback] callback and batches operations that can be merged.
-///<p>
-///For instance, when 2 add operations comes that adds 2 consecutive elements,
-///BatchingListUpdateCallback merges them and calls the wrapped callback only once.
-///<p>
-///If you use this class to batch updates, you must call dispatchLastEvent() when the
-///stream of update events drain.
-///
-
-// ignore: deprecated_member_use_from_same_package
-class BatchingListUpdateCallback implements ListUpdateCallback {
-  static const int TYPE_NONE = 0;
-  static const int TYPE_ADD = 1;
-  static const int TYPE_REMOVE = 2;
-  static const int TYPE_CHANGE = 3;
-
-  // ignore: deprecated_member_use_from_same_package
-  final ListUpdateCallback mWrapped;
-  int mLastEventType = TYPE_NONE;
-  int mLastEventPosition = -1;
-  int mLastEventCount = -1;
-  Object mLastEventPayload;
-
-  BatchingListUpdateCallback(this.mWrapped);
-
-  ///BatchingListUpdateCallback holds onto the last event to see if it can be merged with the
-  ///next one. When stream of events finish, you should call this method to dispatch the last
-  ///event.
-  ///
-  void dispatchLastEvent() {
-    if (mLastEventType == TYPE_NONE) {
-      return;
-    }
-    switch (mLastEventType) {
-      case TYPE_ADD:
-        mWrapped.onInserted(mLastEventPosition, mLastEventCount);
-        break;
-      case TYPE_REMOVE:
-        mWrapped.onRemoved(mLastEventPosition, mLastEventCount);
-        break;
-      case TYPE_CHANGE:
-        mWrapped.onChanged(
-            mLastEventPosition, mLastEventCount, mLastEventPayload);
-        break;
-    }
-    mLastEventPayload = null;
-    mLastEventType = TYPE_NONE;
-  }
-
-  @override
-  void onInserted(int position, int count) {
-    if (mLastEventType == TYPE_ADD &&
-        position >= mLastEventPosition &&
-        position <= mLastEventPosition + mLastEventCount) {
-      mLastEventCount += count;
-      mLastEventPosition = math.min(position, mLastEventPosition);
-      return;
-    }
-    dispatchLastEvent();
-    mLastEventPosition = position;
-    mLastEventCount = count;
-    mLastEventType = TYPE_ADD;
-  }
-
-  @override
-  void onRemoved(int position, int count) {
-    if (mLastEventType == TYPE_REMOVE &&
-        mLastEventPosition >= position &&
-        mLastEventPosition <= position + count) {
-      mLastEventCount += count;
-      mLastEventPosition = position;
-      return;
-    }
-    dispatchLastEvent();
-    mLastEventPosition = position;
-    mLastEventCount = count;
-    mLastEventType = TYPE_REMOVE;
-  }
-
-  @override
-  void onMoved(int fromPosition, int toPosition) {
-    dispatchLastEvent(); // moves are not merged
-    mWrapped.onMoved(fromPosition, toPosition);
-  }
-
-  @override
-  void onChanged(int position, int count, Object payload) {
-    if (mLastEventType == TYPE_CHANGE &&
-        !(position > mLastEventPosition + mLastEventCount ||
-            position + count < mLastEventPosition ||
-            mLastEventPayload != payload)) {
-      // take potential overlap into account
-      final previousEnd = mLastEventPosition + mLastEventCount;
-      mLastEventPosition = math.min(position, mLastEventPosition);
-      mLastEventCount =
-          math.max(previousEnd, position + count) - mLastEventPosition;
-      return;
-    }
-    dispatchLastEvent();
-    mLastEventPosition = position;
-    mLastEventCount = count;
-    mLastEventPayload = payload;
-    mLastEventType = TYPE_CHANGE;
-  }
+  _PostponedUpdate(
+      {required this.posInOwnerList,
+      required this.currentPos,
+      required this.removal});
 }
 
 ///
@@ -752,15 +472,15 @@ DiffResult calculateDiff(DiffDelegate cb, {bool detectMoves = false}) {
   final rangePool = <_Range>[];
   while (stack.isNotEmpty) {
     final range = stack.removeLast();
-    final snake = _diffPartial(cb, range.oldListStart, range.oldListEnd,
-        range.newListStart, range.newListEnd, forward, backward, max);
+    final snake = _diffPartial(cb, range.oldListStart!, range.oldListEnd!,
+        range.newListStart!, range.newListEnd!, forward, backward, max);
     if (snake != null) {
       if (snake.size > 0) {
         snakes.add(snake);
       }
       // offset the snake to convert its coordinates from the Range's area to global
-      snake.x += range.oldListStart;
-      snake.y += range.newListStart;
+      snake.x += range.oldListStart!;
+      snake.y += range.newListStart!;
       // add new ranges for left and right
       final left = rangePool.isEmpty ? _Range() : rangePool.removeLast();
       left.oldListStart = range.oldListStart;
@@ -803,7 +523,7 @@ DiffResult calculateDiff(DiffDelegate cb, {bool detectMoves = false}) {
   return DiffResult._(cb, snakes, forward, backward, detectMoves);
 }
 
-_Snake _diffPartial(DiffDelegate cb, int startOld, int endOld, int startNew,
+_Snake? _diffPartial(DiffDelegate cb, int startOld, int endOld, int startNew,
     int endNew, List<int> forward, List<int> backward, int kOffset) {
   final oldSize = endOld - startOld;
   final newSize = endNew - startNew;
@@ -843,12 +563,14 @@ _Snake _diffPartial(DiffDelegate cb, int startOld, int endOld, int startNew,
       forward[kOffset + k] = x;
       if (checkInFwd && k >= delta - d + 1 && k <= delta + d - 1) {
         if (forward[kOffset + k] >= backward[kOffset + k]) {
-          final outSnake = _Snake();
-          outSnake.x = backward[kOffset + k];
-          outSnake.y = outSnake.x - k;
-          outSnake.size = forward[kOffset + k] - backward[kOffset + k];
-          outSnake.removal = removal;
-          outSnake.reverse = false;
+          final x = backward[kOffset + k];
+          final outSnake = _Snake(
+            x: x,
+            y: x - k,
+            size: forward[kOffset + k] - backward[kOffset + k],
+            removal: removal,
+            reverse: false,
+          );
           return outSnake;
         }
       }
@@ -880,13 +602,14 @@ _Snake _diffPartial(DiffDelegate cb, int startOld, int endOld, int startNew,
       backward[kOffset + backwardK] = x;
       if (!checkInFwd && k + delta >= -d && k + delta <= d) {
         if (forward[kOffset + backwardK] >= backward[kOffset + backwardK]) {
-          final outSnake = _Snake();
-          outSnake.x = backward[kOffset + backwardK];
-          outSnake.y = outSnake.x - backwardK;
-          outSnake.size =
-              forward[kOffset + backwardK] - backward[kOffset + backwardK];
-          outSnake.removal = removal;
-          outSnake.reverse = true;
+          final x = backward[kOffset + backwardK];
+          final outSnake = _Snake(
+            x: x,
+            y: x - backwardK,
+            size: forward[kOffset + backwardK] - backward[kOffset + backwardK],
+            removal: removal,
+            reverse: true,
+          );
           return outSnake;
         }
       }
@@ -904,7 +627,7 @@ diff calculation.''');
 /// @param detectMoves wheter move detection should be enabled
 /// @param equalityChecker use this if you don't want to use the equality as defined by the == operator
 DiffResult calculateListDiff<T>(List<T> oldList, List<T> newList,
-    {bool detectMoves = true, bool Function(T, T) equalityChecker}) {
+    {bool detectMoves = true, bool Function(T, T)? equalityChecker}) {
   return calculateDiff(ListDiffDelegate(oldList, newList, equalityChecker),
       detectMoves: detectMoves);
 }
@@ -913,9 +636,9 @@ DiffResult calculateListDiff<T>(List<T> oldList, List<T> newList,
 /// or KtList and want to avoid copying
 DiffResult calculateCustomListDiff<T, L>(L oldList, L newList,
     {bool detectMoves = true,
-    bool Function(T, T) equalityChecker,
-    T Function(L, int) getByIndex,
-    int Function(L) getLength}) {
+    bool Function(T, T)? equalityChecker,
+    required T Function(L, int) getByIndex,
+    required int Function(L) getLength}) {
   return calculateDiff(
       CustomListDiffDelegate<T, L>(
         oldList: oldList,
@@ -929,7 +652,7 @@ DiffResult calculateCustomListDiff<T, L>(L oldList, L newList,
 
 extension _Batch on Iterable<DiffUpdate> {
   Iterable<DiffUpdate> batch() sync* {
-    DiffUpdate lastUpdate;
+    DiffUpdate? lastUpdate;
     for (final update in this) {
       if (lastUpdate.runtimeType != update.runtimeType) {
         if (lastUpdate != null) {
@@ -938,7 +661,7 @@ extension _Batch on Iterable<DiffUpdate> {
         lastUpdate = update;
       } else {
         if (lastUpdate is Move || lastUpdate is Change) {
-          yield lastUpdate;
+          yield lastUpdate!;
           lastUpdate = update;
         } else if (update is Insert) {
           final lastInsert = lastUpdate as Insert;

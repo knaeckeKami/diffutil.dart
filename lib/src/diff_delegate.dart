@@ -54,7 +54,7 @@ abstract class DiffDelegate {
   ///@return A payload object that represents the change between the two items.
   ///
 
-  Object getChangePayload(int oldItemPosition, int newItemPosition) {
+  Object? getChangePayload(int oldItemPosition, int newItemPosition) {
     return null;
   }
 }
@@ -65,7 +65,7 @@ class ListDiffDelegate<T> implements DiffDelegate {
   final bool Function(T, T) equalityChecker;
 
   ListDiffDelegate(this.oldList, this.newList,
-      [bool Function(T, T) equalityChecker])
+      [bool Function(T, T)? equalityChecker])
       : equalityChecker = equalityChecker ?? ((a, b) => a == b);
 
   @override
@@ -79,7 +79,7 @@ class ListDiffDelegate<T> implements DiffDelegate {
   }
 
   @override
-  Object getChangePayload(int oldItemPosition, int newItemPosition) {
+  Object? getChangePayload(int oldItemPosition, int newItemPosition) {
     return null;
   }
 
@@ -102,11 +102,11 @@ class CustomListDiffDelegate<T, L> implements DiffDelegate {
   final int Function(L) getLength;
 
   CustomListDiffDelegate(
-      {this.oldList,
-      this.newList,
-      this.getByIndex,
-      this.getLength,
-      bool Function(T, T) equalityChecker})
+      {required this.oldList,
+      required this.newList,
+      required this.getByIndex,
+      required this.getLength,
+      bool Function(T, T)? equalityChecker})
       : equalityChecker = equalityChecker ?? ((a, b) => a == b);
 
   @override
@@ -121,7 +121,7 @@ class CustomListDiffDelegate<T, L> implements DiffDelegate {
   }
 
   @override
-  Object getChangePayload(int oldItemPosition, int newItemPosition) {
+  Object? getChangePayload(int oldItemPosition, int newItemPosition) {
     return null;
   }
 

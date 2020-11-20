@@ -1,13 +1,14 @@
-import 'package:meta/meta.dart';
-
 abstract class DiffUpdate {
-  const factory DiffUpdate.insert({int position, int count}) = Insert;
+  const factory DiffUpdate.insert({required int position, required int count}) =
+      Insert;
 
-  const factory DiffUpdate.remove({int position, int count}) = Remove;
+  const factory DiffUpdate.remove({required int position, required int count}) =
+      Remove;
 
-  const factory DiffUpdate.change({int position, Object payload}) = Change;
+  const factory DiffUpdate.change({required int position, Object? payload}) =
+      Change;
 
-  const factory DiffUpdate.move({int from, int to}) = Move;
+  const factory DiffUpdate.move({required int from, required int to}) = Move;
 
   /// call one of the given callback functions depending on the type of this object.
   ///
@@ -17,10 +18,10 @@ abstract class DiffUpdate {
   /// @param move callback function to be called if this object is of type [Move]
   ///
   T when<T>({
-    T Function(int position, int count) insert,
-    T Function(int position, int count) remove,
-    T Function(int position, Object payload) change,
-    T Function(int from, int to) move,
+    required T Function(int position, int count) insert,
+    required T Function(int position, int count) remove,
+    required T Function(int position, Object? payload) change,
+    required T Function(int from, int to) move,
   });
 }
 
@@ -36,9 +37,7 @@ class Insert implements DiffUpdate, BatchableDiff {
   @override
   final int count;
 
-  const Insert({@required this.position, @required this.count})
-      : assert(position != null),
-        assert(count != null);
+  const Insert({required this.position, required this.count});
 
   @override
   bool operator ==(Object other) =>
@@ -53,10 +52,10 @@ class Insert implements DiffUpdate, BatchableDiff {
 
   @override
   T when<T>(
-      {T Function(int p1, int p2) insert,
-      T Function(int p1, int p2) remove,
-      T Function(int p1, Object p2) change,
-      T Function(int p1, int p2) move}) {
+      {required T Function(int p1, int p2) insert,
+      required T Function(int p1, int p2)? remove,
+      required T Function(int p1, Object? p2)? change,
+      required T Function(int p1, int p2)? move}) {
     return insert(position, count);
   }
 
@@ -72,9 +71,7 @@ class Remove implements DiffUpdate, BatchableDiff {
   @override
   final int count;
 
-  const Remove({@required this.position, @required this.count})
-      : assert(position != null),
-        assert(count != null);
+  const Remove({required this.position, required this.count});
 
   @override
   bool operator ==(Object other) =>
@@ -89,10 +86,10 @@ class Remove implements DiffUpdate, BatchableDiff {
 
   @override
   T when<T>(
-      {T Function(int p1, int p2) insert,
-      T Function(int p1, int p2) remove,
-      T Function(int p1, Object p2) change,
-      T Function(int p1, int p2) move}) {
+      {T Function(int p1, int p2)? insert,
+      required T Function(int p1, int p2) remove,
+      T Function(int p1, Object p2)? change,
+      T Function(int p1, int p2)? move}) {
     return remove(position, count);
   }
 
@@ -104,10 +101,9 @@ class Remove implements DiffUpdate, BatchableDiff {
 
 class Change implements DiffUpdate {
   final int position;
-  final Object payload;
+  final Object? payload;
 
-  const Change({@required this.position, this.payload})
-      : assert(position != null);
+  const Change({required this.position, this.payload});
 
   @override
   bool operator ==(Object other) =>
@@ -122,10 +118,10 @@ class Change implements DiffUpdate {
 
   @override
   T when<T>(
-      {T Function(int p1, int p2) insert,
-      T Function(int p1, int p2) remove,
-      T Function(int p1, Object p2) change,
-      T Function(int p1, int p2) move}) {
+      {required T Function(int p1, int p2) insert,
+      required T Function(int p1, int p2) remove,
+      required T Function(int p1, Object? p2) change,
+      required T Function(int p1, int p2) move}) {
     return change(position, payload);
   }
 
@@ -139,9 +135,7 @@ class Move implements DiffUpdate {
   final int from;
   final int to;
 
-  const Move({@required this.from, @required this.to})
-      : assert(from != null),
-        assert(to != null);
+  const Move({required this.from, required this.to});
 
   @override
   bool operator ==(Object other) =>
@@ -156,10 +150,10 @@ class Move implements DiffUpdate {
 
   @override
   T when<T>(
-      {T Function(int p1, int p2) insert,
-      T Function(int p1, int p2) remove,
-      T Function(int p1, Object p2) change,
-      T Function(int p1, int p2) move}) {
+      {required T Function(int p1, int p2)? insert,
+      required T Function(int p1, int p2)? remove,
+      required T Function(int p1, Object p2)? change,
+      required T Function(int p1, int p2) move}) {
     return move(from, to);
   }
 
