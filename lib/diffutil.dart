@@ -7,9 +7,7 @@ export 'package:diffutil_dart/src/diffutil_impl.dart'
         calculateDiff,
         calculateListDiff,
         calculateCustomListDiff,
-        DiffResult,
-        // ignore: deprecated_member_use_from_same_package
-        ListUpdateCallback;
+        DiffResult;
 
 export 'package:diffutil_dart/src/model/diffupdate.dart'
     show DiffUpdate, Insert, Remove, Move, Change, BatchableDiff;
