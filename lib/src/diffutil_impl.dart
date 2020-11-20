@@ -311,8 +311,7 @@ class DiffResult {
         if ((_mOldItemStatuses[snake.x + i] & FLAG_MASK) == FLAG_CHANGED) {
           updates.add(DiffUpdate.change(
               position: snake.x + i,
-              payload:
-                  _mCallback.getChangePayload(snake.x + i, snake.y + i)));
+              payload: _mCallback.getChangePayload(snake.x + i, snake.y + i)));
         }
       }
       posOld = snake.x;
@@ -364,8 +363,8 @@ class DiffResult {
           // the item was moved to that position. we do -1 because this is a move not
           // add and removing current item offsets the target move by 1
           //noinspection ConstantConditions
-          updates.add(
-              DiffUpdate.move(from: start + i, to: update.currentPos - 1));
+          updates
+              .add(DiffUpdate.move(from: start + i, to: update.currentPos - 1));
           if (status == FLAG_MOVED_CHANGED) {
             // also dispatch a change
             updates.add(DiffUpdate.change(
