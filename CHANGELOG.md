@@ -1,7 +1,11 @@
+## 2.0.0-nullsafety.0
+
+- removed deprecated methods
+- migrate to nullsafety
+
 ## 1.0.2
 
 - More tests, add github action badges
-
 
 ## 1.0.1
 
