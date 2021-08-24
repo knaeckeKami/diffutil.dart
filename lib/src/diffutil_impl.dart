@@ -289,6 +289,7 @@ class DiffResult {
   }
 
   Iterable<DiffUpdate> getUpdates({bool batch = true}) {
+    print(this._mSnakes);
     final updates = <DiffUpdate>[];
     // These are add/remove ops that are converted to moves. We track their positions until
     // their respective update operations are processed.
@@ -305,7 +306,7 @@ class DiffResult {
       }
       if (endY < posNew!) {
         _dispatchAdditions(
-            postponedUpdates, updates, endX, posNew - endY, endY);
+            postponedUpdates, updates, endX, posNew - endY, endY, snake);
       }
       for (var i = snakeSize - 1; i >= 0; i--) {
         if ((_mOldItemStatuses[snake.x + i] & FLAG_MASK) == FLAG_CHANGED) {
@@ -385,17 +386,27 @@ class DiffResult {
     }
   }
 
-  void _dispatchAdditions(List<_PostponedUpdate> postponedUpdates,
-      List<DiffUpdate> updates, int start, int count, int globalIndex) {
+  void _dispatchAdditions(
+      List<_PostponedUpdate> postponedUpdates,
+      List<DiffUpdate> updates,
+      int start,
+      int count,
+      int globalIndex,
+      _Snake snake) {
     if (!_mDetectMoves) {
-      updates.add(DiffUpdate.insert(position: start, count: count));
+      updates.add(DiffUpdate.insert(position: start, count: count, data: null));
       return;
     }
     for (var i = count - 1; i >= 0; i--) {
       final status = _mNewItemStatuses[globalIndex + i] & FLAG_MASK;
       switch (status) {
         case 0: // real addition
-          updates.add(DiffUpdate.insert(position: start, count: 1));
+          var item;
+          if (_mCallback is ListDiffDelegate) {
+            item = (_mCallback as ListDiffDelegate).newList[snake.y + snake.size + i];
+
+          }
+          updates.add(DiffUpdate.insert(position: start, count: 1, data: item));
           for (final update in postponedUpdates) {
             update.currentPos += 1;
           }
@@ -668,7 +679,8 @@ extension _Batch on Iterable<DiffUpdate> {
           if ((update.position - lastInsert.position).abs() <= 1) {
             lastUpdate = DiffUpdate.insert(
                 position: min(update.position, lastInsert.position),
-                count: update.count + lastInsert.count);
+                count: update.count + lastInsert.count,
+                data: null);
           } else {
             yield lastUpdate;
             lastUpdate = update;

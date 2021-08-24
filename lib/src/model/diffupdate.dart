@@ -1,5 +1,5 @@
 abstract class DiffUpdate {
-  const factory DiffUpdate.insert({required int position, required int count}) =
+  const factory DiffUpdate.insert({required int position, required int count, Object? data}) =
       Insert;
 
   const factory DiffUpdate.remove({required int position, required int count}) =
@@ -18,7 +18,7 @@ abstract class DiffUpdate {
   /// @param move callback function to be called if this object is of type [Move]
   ///
   T when<T>({
-    required T Function(int position, int count) insert,
+    required T Function(int position, int count, Object? data) insert,
     required T Function(int position, int count) remove,
     required T Function(int position, Object? payload) change,
     required T Function(int from, int to) move,
@@ -37,13 +37,17 @@ class Insert implements DiffUpdate, BatchableDiff {
   @override
   final int count;
 
-  const Insert({required this.position, required this.count});
+  final Object? data;
+
+  const Insert(
+      {required this.position, required this.count,  this.data });
 
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
       other is Insert &&
           runtimeType == other.runtimeType &&
+          data == other.data &&
           position == other.position &&
           count == other.count;
 
@@ -52,16 +56,16 @@ class Insert implements DiffUpdate, BatchableDiff {
 
   @override
   T when<T>(
-      {required T Function(int p1, int p2) insert,
+      {required T Function(int p1, int p2, Object? data) insert,
       required T Function(int p1, int p2)? remove,
       required T Function(int p1, Object? p2)? change,
       required T Function(int p1, int p2)? move}) {
-    return insert(position, count);
+    return insert(position, count, data);
   }
 
   @override
   String toString() {
-    return 'Insert{position: $position, count: $count}';
+    return 'Insert{position: $position, count: $count, data: $data}';
   }
 }
 
@@ -86,7 +90,7 @@ class Remove implements DiffUpdate, BatchableDiff {
 
   @override
   T when<T>(
-      {T Function(int p1, int p2)? insert,
+      {T Function(int p1, int p2, Object? _)? insert,
       required T Function(int p1, int p2) remove,
       T Function(int p1, Object p2)? change,
       T Function(int p1, int p2)? move}) {
@@ -118,7 +122,7 @@ class Change implements DiffUpdate {
 
   @override
   T when<T>(
-      {required T Function(int p1, int p2) insert,
+      {required T Function(int p1, int p2, Object? _) insert,
       required T Function(int p1, int p2) remove,
       required T Function(int p1, Object? p2) change,
       required T Function(int p1, int p2) move}) {
@@ -150,7 +154,7 @@ class Move implements DiffUpdate {
 
   @override
   T when<T>(
-      {required T Function(int p1, int p2)? insert,
+      {required T Function(int p1, int p2, Object? _)? insert,
       required T Function(int p1, int p2)? remove,
       required T Function(int p1, Object p2)? change,
       required T Function(int p1, int p2) move}) {

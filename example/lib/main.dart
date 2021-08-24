@@ -14,7 +14,7 @@ void main() {
   // use the diff using a list of diff objects
   for (final update in listDiff) {
     update.when(
-      insert: (pos, count) => print('inserted $count item on $pos'),
+      insert: (pos, count, _) => print('inserted $count item on $pos'),
       remove: (pos, count) => print('removed $count item on $pos'),
       change: (pos, payload) => print('changed on $pos with payload $payload'),
       move: (from, to) => print('move from $from to $to'),

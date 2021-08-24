@@ -1,4 +1,5 @@
 import 'package:diffutil_dart/diffutil.dart' as diffutil;
+import 'package:diffutil_dart/diffutil.dart';
 import 'package:diffutil_dart/src/model/diffupdate.dart';
 import 'package:test/test.dart';
 
@@ -17,7 +18,7 @@ void main() {
       final updates =
           diffutil.calculateListDiff([], [1, 2, 3]).getUpdates(batch: true);
 
-      expect(updates, const [Insert(position: 0, count: 3)]);
+      expect(updates, const [Insert(position: 0, count: 3),]);
     });
 
     test(
@@ -28,12 +29,12 @@ void main() {
       expect(updates, const [diffutil.Remove(position: 0, count: 3)]);
     });
 
-    test('[1,2,3] -> [1,2,4] list should have one insert and one remvove', () {
+    test('[1,2,3] -> [1,0,3] list should have one insert and one remove', () {
       final updates =
           diffutil.calculateListDiff([1, 2, 3], [1, 0, 3]).getUpdates();
 
       expect(updates,
-          [Remove(position: 1, count: 1), Insert(position: 1, count: 1)]);
+          [Remove(position: 1, count: 1), Insert(position: 1, count: 1, data: 0)]);
     });
 
     test(
@@ -142,7 +143,7 @@ void main() {
           from: 1,
           to: 0,
         ),
-        Insert(position: 0, count: 1)
+        Insert(position: 0, count: 1, data: 3)
       ]);
     });
 
@@ -188,10 +189,10 @@ void main() {
         .getUpdates();
 
     expect(updates, [
-      Insert(position: 1, count: 1),
+      Insert(position: 1, count: 1, data: DataObject(id: 3, payload: 2)),
       Move(from: 2, to: 0),
       Change(position: 0, payload: null),
-      Insert(position: 0, count: 1)
+      Insert(position: 0, count: 1, data: DataObject(id: 0, payload: -1))
     ]);
   });
 
@@ -210,7 +211,7 @@ void main() {
         .getUpdates();
 
     expect(updates, [
-      Insert(position: 2, count: 1),
+      Insert(position: 2, count: 1, data: DataObject(id: 1, payload: 1)),
       Change(position: 1, payload: null),
       Change(position: 0, payload: null)
     ]);
@@ -238,7 +239,7 @@ void main() {
     ]);
   });
 
-  group('test list result calculaction', () {
+  group('test list result calculation', () {
     test('insert works in result list', () {
       expect(
           diffutil
@@ -261,8 +262,8 @@ void main() {
           .getUpdates()
           .toList();
 
-      expect(updates, const [
-        DiffUpdate.insert(position: 2, count: 1),
+      expect(updates,  [
+        DiffUpdate.insert(position: 2, count: 1, data: DataObject(id: 1, payload: 1)),
         DiffUpdate.change(position: 1, payload: null),
         DiffUpdate.change(position: 0, payload: null),
       ]);
@@ -313,6 +314,32 @@ void main() {
       ]);
     });
   });
+
+  test("empty -> [...6 items] should have 6 inserts operations with consecutive positions and count 1 when not batched", () {
+    final apiList = [
+      SimpleClass("1", "Content 1"),
+      SimpleClass("2", "Content 2"),
+      SimpleClass("3", "Content 3"),
+      SimpleClass("4", "Content 4"),
+      SimpleClass("5", "Content 5"),
+      SimpleClass("6", "Content 6"),
+    ];
+    final dbList = <SimpleClass>[];
+
+    final diff = calculateListDiff(
+      dbList, apiList,
+      detectMoves: true,
+    ).getUpdates(batch: false).toList();
+    expect(diff,  [
+      Insert(position: 0, count: 1, data: SimpleClass("6", "Content 6")),
+      Insert(position: 0, count: 1, data: SimpleClass("5", "Content 5")),
+      Insert(position: 0, count: 1, data: SimpleClass("4", "Content 4")),
+      Insert(position: 0, count: 1, data: SimpleClass("3", "Content 3")),
+      Insert(position: 0, count: 1, data: SimpleClass("2", "Content 2")),
+      Insert(position: 0, count: 1, data: SimpleClass("1", "Content 1")),
+    ]);
+  });
+
 }
 
 class DataObjectListDiff extends diffutil.ListDiffDelegate<DataObject> {
@@ -368,4 +395,32 @@ class DataObject {
 
   @override
   int get hashCode => id.hashCode ^ payload.hashCode;
+
+  @override
+  String toString() {
+    return 'DataObject{id: $id, payload: $payload}';
+  }
+}
+
+class SimpleClass {
+  final String id;
+  final String content;
+
+  SimpleClass(this.id, this.content);
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+          other is SimpleClass &&
+              runtimeType == other.runtimeType &&
+              id == other.id &&
+              content == other.content;
+
+  @override
+  int get hashCode => id.hashCode ^ content.hashCode;
+
+  @override
+  String toString() {
+    return 'SimpleClass{id: $id, content: $content}';
+  }
 }
