@@ -1,9 +1,9 @@
 abstract class DiffUpdate {
-  const factory DiffUpdate.insert({required int position, required int count, Object? data}) =
-      Insert;
+  const factory DiffUpdate.insert(
+      {required int position, required int count, Object? data}) = Insert;
 
-  const factory DiffUpdate.remove({required int position, required int count}) =
-      Remove;
+  const factory DiffUpdate.remove(
+      {required int position, required int count, Object? item}) = Remove;
 
   const factory DiffUpdate.change({required int position, Object? payload}) =
       Change;
@@ -19,7 +19,7 @@ abstract class DiffUpdate {
   ///
   T when<T>({
     required T Function(int position, int count, Object? data) insert,
-    required T Function(int position, int count) remove,
+    required T Function(int position, int count, Object? item) remove,
     required T Function(int position, Object? payload) change,
     required T Function(int from, int to) move,
   });
@@ -39,8 +39,7 @@ class Insert implements DiffUpdate, BatchableDiff {
 
   final Object? data;
 
-  const Insert(
-      {required this.position, required this.count,  this.data });
+  const Insert({required this.position, required this.count, this.data});
 
   @override
   bool operator ==(Object other) =>
@@ -57,7 +56,7 @@ class Insert implements DiffUpdate, BatchableDiff {
   @override
   T when<T>(
       {required T Function(int p1, int p2, Object? data) insert,
-      required T Function(int p1, int p2)? remove,
+      required T Function(int p1, int p2, Object? data)? remove,
       required T Function(int p1, Object? p2)? change,
       required T Function(int p1, int p2)? move}) {
     return insert(position, count, data);
@@ -75,7 +74,9 @@ class Remove implements DiffUpdate, BatchableDiff {
   @override
   final int count;
 
-  const Remove({required this.position, required this.count});
+  final Object? item;
+
+  const Remove({required this.position, required this.count, this.item});
 
   @override
   bool operator ==(Object other) =>
@@ -83,7 +84,8 @@ class Remove implements DiffUpdate, BatchableDiff {
       other is Remove &&
           runtimeType == other.runtimeType &&
           position == other.position &&
-          count == other.count;
+          count == other.count &&
+          item == other.item;
 
   @override
   int get hashCode => position.hashCode ^ count.hashCode;
@@ -91,15 +93,15 @@ class Remove implements DiffUpdate, BatchableDiff {
   @override
   T when<T>(
       {T Function(int p1, int p2, Object? _)? insert,
-      required T Function(int p1, int p2) remove,
+      required T Function(int p1, int p2, Object? data) remove,
       T Function(int p1, Object p2)? change,
       T Function(int p1, int p2)? move}) {
-    return remove(position, count);
+    return remove(position, count, item);
   }
 
   @override
   String toString() {
-    return 'Remove{position: $position, count: $count}';
+    return 'Remove{position: $position, count: $count, item: $item}';
   }
 }
 
@@ -123,7 +125,7 @@ class Change implements DiffUpdate {
   @override
   T when<T>(
       {required T Function(int p1, int p2, Object? _) insert,
-      required T Function(int p1, int p2) remove,
+      required T Function(int p1, int p2, Object? data) remove,
       required T Function(int p1, Object? p2) change,
       required T Function(int p1, int p2) move}) {
     return change(position, payload);
@@ -155,7 +157,7 @@ class Move implements DiffUpdate {
   @override
   T when<T>(
       {required T Function(int p1, int p2, Object? _)? insert,
-      required T Function(int p1, int p2)? remove,
+      required T Function(int p1, int p2, Object? data)? remove,
       required T Function(int p1, Object p2)? change,
       required T Function(int p1, int p2) move}) {
     return move(from, to);

@@ -302,7 +302,7 @@ class DiffResult {
       final endX = snake.x + snakeSize;
       final endY = snake.y + snakeSize;
       if (endX < posOld!) {
-        _dispatchRemovals(postponedUpdates, updates, endX, posOld - endX, endX);
+        _dispatchRemovals(postponedUpdates, updates, endX, posOld - endX, endX, snake);
       }
       if (endY < posNew!) {
         _dispatchAdditions(
@@ -343,16 +343,32 @@ class DiffResult {
   }
 
   void _dispatchRemovals(List<_PostponedUpdate> postponedUpdates,
-      List<DiffUpdate> updates, int start, int count, int globalIndex) {
+      List<DiffUpdate> updates, int start, int count, int globalIndex,   _Snake snake) {
+
+
     if (!_mDetectMoves) {
-      updates.add(DiffUpdate.remove(position: start, count: count));
+      var item;
+      if (_mCallback is ListDiffDelegate) {
+        item = (_mCallback as ListDiffDelegate).oldList[snake.x + snake.size];
+
+      }
+      print(item);
+
+      updates.add(DiffUpdate.remove(position: start, count: count, item: item));
       return;
     }
     for (var i = count - 1; i >= 0; i--) {
+      var item;
+      if (_mCallback is ListDiffDelegate) {
+        item = (_mCallback as ListDiffDelegate).oldList[snake.x + snake.size + i];
+
+      }
+      print(item);
+
       final status = _mOldItemStatuses[globalIndex + i] & FLAG_MASK;
       switch (status) {
         case 0: // real removal
-          updates.add(DiffUpdate.remove(position: start + i, count: 1));
+          updates.add(DiffUpdate.remove(position: start + i, count: 1, item: item));
           for (final update in postponedUpdates) {
             update.currentPos -= 1;
           }
@@ -394,7 +410,12 @@ class DiffResult {
       int globalIndex,
       _Snake snake) {
     if (!_mDetectMoves) {
-      updates.add(DiffUpdate.insert(position: start, count: count, data: null));
+      var item;
+      if (_mCallback is ListDiffDelegate) {
+        item = (_mCallback as ListDiffDelegate).newList[snake.y + snake.size];
+
+      }
+      updates.add(DiffUpdate.insert(position: start, count: count, data: item));
       return;
     }
     for (var i = count - 1; i >= 0; i--) {

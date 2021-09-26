@@ -4,68 +4,33 @@ import 'package:diffutil_dart/diffutil.dart' as diffutil;
 /// pubspec.yaml in the example folder. Just run pub get instead.
 
 void main() {
-  final oldList = [1, 2, 3];
-  final newList = [2, 3, 4];
 
-  print('difference between $oldList and $newList, without move detection:');
+  final List<int> oldList = [10, 20,30];
+  final List<int> newList = [30,40];
 
-  final listDiff = diffutil.calculateListDiff(oldList, newList).getUpdates();
+  final diffResult = diffutil.calculateListDiff(
+    oldList,
+    newList,
+  );
 
-  // use the diff using a list of diff objects
-  for (final update in listDiff) {
+  for (var update in diffResult.getUpdates(batch: false)) {
     update.when(
-      insert: (pos, count, _) => print('inserted $count item on $pos'),
-      remove: (pos, count) => print('removed $count item on $pos'),
-      change: (pos, payload) => print('changed on $pos with payload $payload'),
-      move: (from, to) => print('move from $from to $to'),
+      insert: (position, count, item) {
+        print("inserted count:$count on pos $position. it was the item $item}");
+        return;
+      },
+      remove: (position, count, item) {
+        print("removed on pos $position. it was $item}");
+        return;
+      },
+      change: (position, payload) {
+        return;
+      },
+      move: (from, to) {
+        print("move in oldList element $from to $to");
+        return;
+      },
     );
   }
 
-  print('changeset: $listDiff');
-
-  final oldList2 = [1, 2, 3];
-  final newList2 = [1, 3, 2];
-
-  print('\n');
-
-  print('difference between $oldList2 and $newList2, without move detection:');
-
-  final listDiff2 = diffutil
-      .calculateListDiff(oldList2, newList2, detectMoves: false)
-      .getUpdates();
-
-  print('changeset: $listDiff2');
-
-  print('\n');
-
-  print('difference between $oldList2 and $newList2, with move detection:');
-
-  final listDiff3 = diffutil
-      .calculateListDiff(oldList2, newList2, detectMoves: true)
-      .getUpdates();
-
-  print('changeset: $listDiff3');
-
-  print('\n');
-
-  final oldList3 = [];
-  final newList3 = [1, 2, 3];
-
-  print('difference between $oldList3 and $newList3, batched:');
-
-  final listDiff4 =
-      diffutil.calculateListDiff(oldList3, newList3).getUpdates(batch: true);
-
-  print('changeset: $listDiff4');
-
-  print('\n');
-
-  print('difference between $oldList3 and $newList3, unbatched:');
-
-  final listDiff5 =
-      diffutil.calculateListDiff(oldList3, newList3).getUpdates(batch: false);
-
-  print('changeset: $listDiff5');
-
-  print('\n');
 }

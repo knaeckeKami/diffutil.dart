@@ -18,7 +18,9 @@ void main() {
       final updates =
           diffutil.calculateListDiff([], [1, 2, 3]).getUpdates(batch: true);
 
-      expect(updates, const [Insert(position: 0, count: 3),]);
+      expect(updates, const [
+        Insert(position: 0, count: 3),
+      ]);
     });
 
     test(
@@ -33,8 +35,10 @@ void main() {
       final updates =
           diffutil.calculateListDiff([1, 2, 3], [1, 0, 3]).getUpdates();
 
-      expect(updates,
-          [Remove(position: 1, count: 1), Insert(position: 1, count: 1, data: 0)]);
+      expect(updates, [
+        Remove(position: 1, count: 1),
+        Insert(position: 1, count: 1, data: 0)
+      ]);
     });
 
     test(
@@ -78,7 +82,7 @@ void main() {
           .getUpdates();
 
       expect(updates, [
-        Insert(position: 1, count: 1),
+        Insert(position: 1, count: 1, data: DataObject(id: 2, payload: 2)),
         Change(position: 0, payload: null),
       ]);
     });
@@ -91,7 +95,7 @@ void main() {
           .getUpdates();
 
       expect(updates, [
-        Remove(position: 1, count: 1),
+        Remove(position: 1, count: 1, item: DataObject(id: 2, payload: 2)),
         Change(position: 0, payload: null),
       ]);
     });
@@ -104,8 +108,8 @@ void main() {
           .getUpdates();
 
       expect(updates, [
-        Remove(position: 1, count: 1),
-        Insert(count: 1, position: 1),
+        Remove(position: 1, count: 1, item: DataObject(id: 2, payload: 2)),
+        Insert(count: 1, position: 1, data: DataObject(id: 3, payload: 2)),
         Change(position: 0),
       ]);
     });
@@ -262,8 +266,9 @@ void main() {
           .getUpdates()
           .toList();
 
-      expect(updates,  [
-        DiffUpdate.insert(position: 2, count: 1, data: DataObject(id: 1, payload: 1)),
+      expect(updates, [
+        DiffUpdate.insert(
+            position: 2, count: 1, data: DataObject(id: 1, payload: 1)),
         DiffUpdate.change(position: 1, payload: null),
         DiffUpdate.change(position: 0, payload: null),
       ]);
@@ -315,7 +320,9 @@ void main() {
     });
   });
 
-  test("empty -> [...6 items] should have 6 inserts operations with consecutive positions and count 1 when not batched", () {
+  test(
+      "empty -> [...6 items] should have 6 inserts operations with consecutive positions and count 1 when not batched",
+      () {
     final apiList = [
       SimpleClass("1", "Content 1"),
       SimpleClass("2", "Content 2"),
@@ -327,10 +334,11 @@ void main() {
     final dbList = <SimpleClass>[];
 
     final diff = calculateListDiff(
-      dbList, apiList,
+      dbList,
+      apiList,
       detectMoves: true,
     ).getUpdates(batch: false).toList();
-    expect(diff,  [
+    expect(diff, [
       Insert(position: 0, count: 1, data: SimpleClass("6", "Content 6")),
       Insert(position: 0, count: 1, data: SimpleClass("5", "Content 5")),
       Insert(position: 0, count: 1, data: SimpleClass("4", "Content 4")),
@@ -339,7 +347,6 @@ void main() {
       Insert(position: 0, count: 1, data: SimpleClass("1", "Content 1")),
     ]);
   });
-
 }
 
 class DataObjectListDiff extends diffutil.ListDiffDelegate<DataObject> {
@@ -411,10 +418,10 @@ class SimpleClass {
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-          other is SimpleClass &&
-              runtimeType == other.runtimeType &&
-              id == other.id &&
-              content == other.content;
+      other is SimpleClass &&
+          runtimeType == other.runtimeType &&
+          id == other.id &&
+          content == other.content;
 
   @override
   int get hashCode => id.hashCode ^ content.hashCode;
