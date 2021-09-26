@@ -302,7 +302,8 @@ class DiffResult {
       final endX = snake.x + snakeSize;
       final endY = snake.y + snakeSize;
       if (endX < posOld!) {
-        _dispatchRemovals(postponedUpdates, updates, endX, posOld - endX, endX, snake);
+        _dispatchRemovals(
+            postponedUpdates, updates, endX, posOld - endX, endX, snake);
       }
       if (endY < posNew!) {
         _dispatchAdditions(
@@ -342,15 +343,17 @@ class DiffResult {
     return 'DiffResult{mSnakes: $_mSnakes}, ';
   }
 
-  void _dispatchRemovals(List<_PostponedUpdate> postponedUpdates,
-      List<DiffUpdate> updates, int start, int count, int globalIndex,   _Snake snake) {
-
-
+  void _dispatchRemovals(
+      List<_PostponedUpdate> postponedUpdates,
+      List<DiffUpdate> updates,
+      int start,
+      int count,
+      int globalIndex,
+      _Snake snake) {
     if (!_mDetectMoves) {
       var item;
       if (_mCallback is ListDiffDelegate) {
         item = (_mCallback as ListDiffDelegate).oldList[snake.x + snake.size];
-
       }
       print(item);
 
@@ -360,15 +363,16 @@ class DiffResult {
     for (var i = count - 1; i >= 0; i--) {
       var item;
       if (_mCallback is ListDiffDelegate) {
-        item = (_mCallback as ListDiffDelegate).oldList[snake.x + snake.size + i];
-
+        item =
+            (_mCallback as ListDiffDelegate).oldList[snake.x + snake.size + i];
       }
       print(item);
 
       final status = _mOldItemStatuses[globalIndex + i] & FLAG_MASK;
       switch (status) {
         case 0: // real removal
-          updates.add(DiffUpdate.remove(position: start + i, count: 1, item: item));
+          updates.add(
+              DiffUpdate.remove(position: start + i, count: 1, item: item));
           for (final update in postponedUpdates) {
             update.currentPos -= 1;
           }
@@ -413,7 +417,6 @@ class DiffResult {
       var item;
       if (_mCallback is ListDiffDelegate) {
         item = (_mCallback as ListDiffDelegate).newList[snake.y + snake.size];
-
       }
       updates.add(DiffUpdate.insert(position: start, count: count, data: item));
       return;
@@ -424,8 +427,8 @@ class DiffResult {
         case 0: // real addition
           var item;
           if (_mCallback is ListDiffDelegate) {
-            item = (_mCallback as ListDiffDelegate).newList[snake.y + snake.size + i];
-
+            item = (_mCallback as ListDiffDelegate)
+                .newList[snake.y + snake.size + i];
           }
           updates.add(DiffUpdate.insert(position: start, count: 1, data: item));
           for (final update in postponedUpdates) {

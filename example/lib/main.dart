@@ -4,9 +4,8 @@ import 'package:diffutil_dart/diffutil.dart' as diffutil;
 /// pubspec.yaml in the example folder. Just run pub get instead.
 
 void main() {
-
-  final List<int> oldList = [10, 20,30];
-  final List<int> newList = [30,40];
+  final List<int> oldList = [10, 20, 30];
+  final List<int> newList = [30, 40];
 
   final diffResult = diffutil.calculateListDiff(
     oldList,
@@ -32,5 +31,4 @@ void main() {
       },
     );
   }
-
 }

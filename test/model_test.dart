@@ -13,7 +13,7 @@ void main() {
     for (final update in updates) {
       update.when(
         insert: (count, pos, _) => expect(update, isA<diffutil.Insert>()),
-        remove: (count, pos,_) => expect(update, isA<diffutil.Remove>()),
+        remove: (count, pos, _) => expect(update, isA<diffutil.Remove>()),
         change: (count, pos) => expect(update, isA<diffutil.Change>()),
         move: (from, to) => expect(update, isA<diffutil.Move>()),
       );

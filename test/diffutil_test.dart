@@ -36,7 +36,7 @@ void main() {
           diffutil.calculateListDiff([1, 2, 3], [1, 0, 3]).getUpdates();
 
       expect(updates, [
-        Remove(position: 1, count: 1),
+        Remove(position: 1, count: 1, item: 2),
         Insert(position: 1, count: 1, data: 0)
       ]);
     });
@@ -47,8 +47,10 @@ void main() {
       final updates =
           diffutil.calculateListDiff([1, 2, 3], [1, 3, 4, 5]).getUpdates();
 
-      expect(updates,
-          [Insert(position: 3, count: 2), Remove(position: 1, count: 1)]);
+      expect(updates, [
+        Insert(position: 3, count: 2),
+        Remove(position: 1, count: 1, item: 2)
+      ]);
     });
   });
 
@@ -156,8 +158,8 @@ void main() {
           detectMoves: true).getUpdates();
 
       expect(updates, [
-        Remove(position: 3, count: 1),
-        Remove(position: 0, count: 1),
+        Remove(position: 3, count: 1, item: 3),
+        Remove(position: 0, count: 1, item: 0),
         Move(from: 1, to: 0)
       ]);
     });
@@ -236,7 +238,7 @@ void main() {
         .getUpdates();
 
     expect(updates, [
-      Remove(position: 2, count: 1),
+      Remove(position: 2, count: 1, item: DataObject(id: 2, payload: 2)),
       Change(position: 1, payload: null),
       Move(from: 0, to: 1),
       Change(position: 1, payload: null)
@@ -279,8 +281,8 @@ void main() {
           .toList();
 
       expect(updates, const [
-        DiffUpdate.remove(position: 3, count: 1),
-        DiffUpdate.remove(position: 0, count: 1),
+        DiffUpdate.remove(position: 3, count: 1, item: 3),
+        DiffUpdate.remove(position: 0, count: 1, item: 0),
         DiffUpdate.move(from: 1, to: 0),
       ]);
     });
@@ -313,9 +315,9 @@ void main() {
           .toList();
 
       expect(updates, const [
-        DiffUpdate.remove(position: 2, count: 1),
-        DiffUpdate.remove(position: 1, count: 1),
-        DiffUpdate.remove(position: 0, count: 1)
+        DiffUpdate.remove(position: 2, count: 1, item: 3),
+        DiffUpdate.remove(position: 1, count: 1, item: 2),
+        DiffUpdate.remove(position: 0, count: 1, item: 1)
       ]);
     });
   });
