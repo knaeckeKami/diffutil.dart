@@ -26,10 +26,7 @@ jobs:
       run: dart analyze
 
     - name: Run tests
-      run: dart test
-
-    - name: Coverage
-      run: dart run test_coverage --min-coverage 89
+      run: dart test --coverage coverage/
 
     - name: Upload coverage to codecov
       run: curl -s https://codecov.io/bash | bash

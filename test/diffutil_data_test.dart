@@ -1,5 +1,4 @@
 import 'package:diffutil_dart/diffutil.dart' as diffutil;
-import 'package:diffutil_dart/src/model/diffupdate.dart';
 import 'package:diffutil_dart/src/model/diffupdate_with_data.dart';
 import 'package:test/test.dart';
 
