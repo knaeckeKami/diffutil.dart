@@ -23,11 +23,13 @@ void main() {
   test('equals/hashcode works', () {
     expect({
       const diffutil.Insert(count: 1, position: 1),
-      const diffutil.Insert(count: 1, position: 1), //ignore: equal_elements_in_set
+      const diffutil.Insert(
+          count: 1, position: 1), //ignore: equal_elements_in_set
     }, hasLength(1));
     expect({
       const diffutil.Remove(count: 1, position: 1),
-      const diffutil.Remove(count: 1, position: 1), //ignore: equal_elements_in_set
+      const diffutil.Remove(
+          count: 1, position: 1), //ignore: equal_elements_in_set
     }, hasLength(1));
     expect({
       const diffutil.Change(position: 1),
@@ -40,9 +42,13 @@ void main() {
   });
 
   test('toString()', () {
-    expect(const diffutil.Insert(position: 1, count: 2).toString(), 'Insert{position: 1, count: 2}');
-    expect(const diffutil.Remove(position: 1, count: 2).toString(), 'Remove{position: 1, count: 2}');
-    expect(const diffutil.Change(position: 1, payload: 2).toString(), 'Change{position: 1, payload: 2}');
-    expect(const diffutil.Move(from: 1, to: 2).toString(), 'Move{from: 1, to: 2}');
+    expect(const diffutil.Insert(position: 1, count: 2).toString(),
+        'Insert{position: 1, count: 2}');
+    expect(const diffutil.Remove(position: 1, count: 2).toString(),
+        'Remove{position: 1, count: 2}');
+    expect(const diffutil.Change(position: 1, payload: 2).toString(),
+        'Change{position: 1, payload: 2}');
+    expect(
+        const diffutil.Move(from: 1, to: 2).toString(), 'Move{from: 1, to: 2}');
   });
 }
