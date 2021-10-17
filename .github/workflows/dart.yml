@@ -11,13 +11,19 @@ jobs:
 
     runs-on: ubuntu-latest
 
-    container:
-      image: google/dart:dev
+
+    strategy:
+      matrix:
+        sdk: [ dev, beta, stable ]
 
     steps:
       - uses: actions/checkout@v2
+      - uses: dart-lang/setup-dart@v1
+        with:
+            sdk: ${{ matrix.sdk }}
       - name: Install dependencies
-        run: pub get
+        run: dart pub get
+
 
       - name: Check format
         run: dart format --set-exit-if-changed .

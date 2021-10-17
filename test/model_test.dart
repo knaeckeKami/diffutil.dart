@@ -22,20 +22,20 @@ void main() {
 
   test('equals/hashcode works', () {
     expect({
-      diffutil.Insert(count: 1, position: 1),
-      diffutil.Insert(count: 1, position: 1),
+      const diffutil.Insert(count: 1, position: 1),
+      const diffutil.Insert(count: 1, position: 1),
     }, hasLength(1));
     expect({
-      diffutil.Remove(count: 1, position: 1),
-      diffutil.Remove(count: 1, position: 1),
+      const diffutil.Remove(count: 1, position: 1),
+      const diffutil.Remove(count: 1, position: 1),
     }, hasLength(1));
     expect({
-      diffutil.Change(position: 1),
-      diffutil.Change(position: 1),
+      const diffutil.Change(position: 1),
+      const diffutil.Change(position: 1),
     }, hasLength(1));
     expect({
-      diffutil.Move(from: 1, to: 2),
-      diffutil.Move(from: 1, to: 2),
+      const diffutil.Move(from: 1, to: 2),
+      const diffutil.Move(from: 1, to: 2),
     }, hasLength(1));
   });
 }

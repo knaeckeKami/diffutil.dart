@@ -3,6 +3,7 @@ import 'dart:typed_data';
 
 import 'package:diffutil_dart/src/diff_delegate.dart';
 import 'package:diffutil_dart/src/model/diffupdate.dart';
+import 'package:diffutil_dart/src/model/diffupdate_with_data.dart';
 
 ///
 ///Snakes represent a match between two lists. It is optionally prefixed or postfixed with an
@@ -71,7 +72,7 @@ class _Range {
 ///You can consume the updates in a DiffResult via
 /// dispatchUpdatesTo().
 ///
-class DiffResult {
+class DiffResult<T> {
   ///
   ///While reading the flags below, keep in mind that when multiple items move in a list,
   ///Myers's may pick any of them as the anchor item and consider that one NOT_CHANGED while
@@ -293,17 +294,17 @@ class DiffResult {
     // These are add/remove ops that are converted to moves. We track their positions until
     // their respective update operations are processed.
     final postponedUpdates = <_PostponedUpdate>[];
-    int? posOld = _mOldListSize;
-    int? posNew = _mNewListSize;
+    int posOld = _mOldListSize;
+    int posNew = _mNewListSize;
     for (var snakeIndex = _mSnakes.length - 1; snakeIndex >= 0; snakeIndex--) {
       final snake = _mSnakes[snakeIndex];
       final snakeSize = snake.size;
       final endX = snake.x + snakeSize;
       final endY = snake.y + snakeSize;
-      if (endX < posOld!) {
+      if (endX < posOld) {
         _dispatchRemovals(postponedUpdates, updates, endX, posOld - endX, endX);
       }
-      if (endY < posNew!) {
+      if (endY < posNew) {
         _dispatchAdditions(
             postponedUpdates, updates, endX, posNew - endY, endY);
       }
@@ -318,6 +319,45 @@ class DiffResult {
       posNew = snake.y;
     }
     return batch ? updates.batch() : updates;
+  }
+
+  Iterable<DataDiffUpdate<T>> getUpdatesWithData() {
+    final delegate = _mCallback;
+    if (delegate is! IndexableItemDiffDelegate<T>) {
+      throw Exception(
+          "$delegate is not a IndexableItemDiffDelegate<$T>. call getUpdates instead or implement IndexableItemDiffDelegate in your DiffDelegate ");
+    }
+    final updates = <DataDiffUpdate<T>>[];
+    // These are add/remove ops that are converted to moves. We track their positions until
+    // their respective update operations are processed.
+    final postponedUpdates = <_PostponedUpdate>[];
+    int posOld = _mOldListSize;
+    int posNew = _mNewListSize;
+    for (var snakeIndex = _mSnakes.length - 1; snakeIndex >= 0; snakeIndex--) {
+      final snake = _mSnakes[snakeIndex];
+      final snakeSize = snake.size;
+      final endX = snake.x + snakeSize;
+      final endY = snake.y + snakeSize;
+      if (endX < posOld) {
+        _dispatchRemovalsWithData(postponedUpdates, updates, delegate, endX,
+            posOld - endX, endX, snake);
+      }
+      if (endY < posNew) {
+        _dispatchAdditionsWithData(postponedUpdates, updates, delegate, endX,
+            posNew - endY, endY, snake);
+      }
+      for (var i = snakeSize - 1; i >= 0; i--) {
+        if ((_mOldItemStatuses[snake.x + i] & FLAG_MASK) == FLAG_CHANGED) {
+          updates.add(DataDiffUpdate.change(
+              position: snake.x + i,
+              oldData: delegate.getOldItemAtIndex(snake.x + i),
+              newData: delegate.getNewItemAtIndex(snake.y + i)));
+        }
+      }
+      posOld = snake.x;
+      posNew = snake.y;
+    }
+    return updates;
   }
 
   static _PostponedUpdate? _removePostponedUpdate(
@@ -385,6 +425,63 @@ class DiffResult {
     }
   }
 
+  void _dispatchRemovalsWithData<T>(
+      List<_PostponedUpdate> postponedUpdates,
+      List<DataDiffUpdate<T>> updates,
+      IndexableItemDiffDelegate<T> delegate,
+      int start,
+      int count,
+      int globalIndex,
+      _Snake snake) {
+    if (!_mDetectMoves) {
+      for (var i = count - 1; i >= 0; i--) {
+        final item = delegate.getOldItemAtIndex(snake.x + snake.size + i);
+        updates.add(DataDiffUpdate.remove(position: start + i, data: item));
+      }
+      return;
+    }
+    for (var i = count - 1; i >= 0; i--) {
+      final status = _mOldItemStatuses[globalIndex + i] & FLAG_MASK;
+      final item = delegate.getOldItemAtIndex(snake.x + snake.size + i);
+      switch (status) {
+        case 0: // real removal
+          updates.add(DataDiffUpdate.remove(position: start + i, data: item));
+          for (final update in postponedUpdates) {
+            update.currentPos -= 1;
+          }
+          break;
+        case FLAG_MOVED_CHANGED:
+        case FLAG_MOVED_NOT_CHANGED:
+          final pos = _mOldItemStatuses[globalIndex + i] >> FLAG_OFFSET;
+          final update = _removePostponedUpdate(postponedUpdates, pos, false)!;
+          // the item was moved to that position. we do -1 because this is a move not
+          // add and removing current item offsets the target move by 1
+          //noinspection ConstantConditions
+          updates.add(DataDiffUpdate.move(
+              from: start + i, to: update.currentPos - 1, data: item));
+          if (status == FLAG_MOVED_CHANGED) {
+            // also dispatch a change
+            //TODO fix data
+            print("_dispatchRemovalsWithData $snake $i $count $update");
+            updates.add(DataDiffUpdate.change(
+                position: update.currentPos - 1,
+                oldData: item,
+                newData: delegate.getNewItemAtIndex(pos)));
+          }
+          break;
+        case FLAG_IGNORE: // ignoring this
+          postponedUpdates.add(_PostponedUpdate(
+              posInOwnerList: globalIndex + i,
+              currentPos: start + i,
+              removal: true));
+          break;
+        default:
+          throw StateError(
+              'unknown flag for pos  ${globalIndex + i}:  $status');
+      }
+    }
+  }
+
   void _dispatchAdditions(List<_PostponedUpdate> postponedUpdates,
       List<DiffUpdate> updates, int start, int count, int globalIndex) {
     if (!_mDetectMoves) {
@@ -424,6 +521,62 @@ class DiffResult {
       }
     }
   }
+
+  void _dispatchAdditionsWithData(
+    List<_PostponedUpdate> postponedUpdates,
+    List<DataDiffUpdate<T>> updates,
+    IndexableItemDiffDelegate<T> delegate,
+    int start,
+    int count,
+    int globalIndex,
+    _Snake snake,
+  ) {
+    if (!_mDetectMoves) {
+      for (var i = count - 1; i >= 0; i--) {
+        final item = delegate.getNewItemAtIndex(snake.y + snake.size + i);
+        updates.add(DataDiffUpdate.insert(position: start, data: item));
+      }
+      return;
+    }
+    for (var i = count - 1; i >= 0; i--) {
+      final status = _mNewItemStatuses[globalIndex + i] & FLAG_MASK;
+      final item = delegate.getNewItemAtIndex(snake.y + snake.size + i);
+      switch (status) {
+        case 0: // real addition
+          updates.add(DataDiffUpdate.insert(position: start, data: item));
+          for (final update in postponedUpdates) {
+            update.currentPos += 1;
+          }
+          break;
+        case FLAG_MOVED_CHANGED:
+        case FLAG_MOVED_NOT_CHANGED:
+          final pos = _mNewItemStatuses[globalIndex + i] >> FLAG_OFFSET;
+          final update = _removePostponedUpdate(postponedUpdates, pos, true)!;
+          // the item was moved from that position
+          updates.add(DataDiffUpdate.move(
+              from: update.currentPos, to: start, data: item));
+          if (status == FLAG_MOVED_CHANGED) {
+            // also dispatch a change
+            //TODO fix data
+            print("_dispatchAdditionsWithData $snake $i $count $update");
+
+            updates.add(DataDiffUpdate.change(
+                position: start,
+                oldData: delegate.getOldItemAtIndex(pos),
+                newData: item));
+          }
+          break;
+        case FLAG_IGNORE: // ignoring this
+          postponedUpdates.add(_PostponedUpdate(
+              posInOwnerList: globalIndex + i,
+              currentPos: start,
+              removal: false));
+          break;
+        default:
+          throw StateError('unknown flag for pos ${globalIndex + i}:  $status');
+      }
+    }
+  }
 }
 
 class _PostponedUpdate {
@@ -435,6 +588,11 @@ class _PostponedUpdate {
       {required this.posInOwnerList,
       required this.currentPos,
       required this.removal});
+
+  @override
+  String toString() {
+    return '_PostponedUpdate{posInOwnerList: $posInOwnerList, currentPos: $currentPos, removal: $removal}';
+  }
 }
 
 ///
@@ -450,7 +608,7 @@ class _PostponedUpdate {
 /// @return A DiffResult that contains the information about the edit sequence to convert the
 /// old list into the new list.
 ///
-DiffResult calculateDiff(DiffDelegate cb, {bool detectMoves = false}) {
+DiffResult<T> calculateDiff<T>(DiffDelegate cb, {bool detectMoves = false}) {
   final oldSize = cb.getOldListSize();
   final newSize = cb.getNewListSize();
   final snakes = <_Snake>[];
@@ -626,15 +784,21 @@ diff calculation.''');
 /// @param newList the new list
 /// @param detectMoves wheter move detection should be enabled
 /// @param equalityChecker use this if you don't want to use the equality as defined by the == operator
-DiffResult calculateListDiff<T>(List<T> oldList, List<T> newList,
-    {bool detectMoves = true, bool Function(T, T)? equalityChecker}) {
-  return calculateDiff(ListDiffDelegate(oldList, newList, equalityChecker),
-      detectMoves: detectMoves);
+DiffResult<T> calculateListDiff<T>(
+  List<T> oldList,
+  List<T> newList, {
+  bool detectMoves = true,
+  bool Function(T, T)? equalityChecker,
+}) {
+  return calculateDiff<T>(
+    ListDiffDelegate<T>(oldList, newList, equalityChecker),
+    detectMoves: detectMoves,
+  );
 }
 
 /// you can use this function if you want to use custom list-types, such as BuiltList
 /// or KtList and want to avoid copying
-DiffResult calculateCustomListDiff<T, L>(L oldList, L newList,
+DiffResult<T> calculateCustomListDiff<T, L>(L oldList, L newList,
     {bool detectMoves = true,
     bool Function(T, T)? equalityChecker,
     required T Function(L, int) getByIndex,

@@ -1,6 +1,6 @@
 #  recommended lint rules by google
 #  see https://dart.dev/guides/language/analysis-options#default-google-rules-pedantic
-include: package:pedantic/analysis_options.yaml
+include: package:lints/recommended.yaml
 
 # custom lint rules
 
@@ -41,3 +41,4 @@ analyzer:
     unused_import: warning
     uri_has_not_been_generated: warning
     dead_code: warning
+    avoid_dynamic_calls: error

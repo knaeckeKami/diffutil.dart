@@ -59,7 +59,14 @@ abstract class DiffDelegate {
   }
 }
 
-class ListDiffDelegate<T> implements DiffDelegate {
+abstract class IndexableItemDiffDelegate<T> extends DiffDelegate {
+  T getOldItemAtIndex(int index);
+
+  T getNewItemAtIndex(int index);
+}
+
+class ListDiffDelegate<T>
+    implements DiffDelegate, IndexableItemDiffDelegate<T> {
   final List<T> oldList;
   final List<T> newList;
   final bool Function(T, T) equalityChecker;
@@ -88,10 +95,17 @@ class ListDiffDelegate<T> implements DiffDelegate {
 
   @override
   int getOldListSize() => oldList.length;
+
+  @override
+  T getNewItemAtIndex(int index) => newList[index];
+
+  @override
+  T getOldItemAtIndex(int index) => oldList[index];
 }
 
 /// can be used for custom list-like types, for example from built_collection or kt.dart
-class CustomListDiffDelegate<T, L> implements DiffDelegate {
+class CustomListDiffDelegate<T, L>
+    implements DiffDelegate, IndexableItemDiffDelegate<T> {
   final L oldList;
   final L newList;
 
@@ -134,4 +148,10 @@ class CustomListDiffDelegate<T, L> implements DiffDelegate {
   int getOldListSize() {
     return getLength(oldList);
   }
+
+  @override
+  T getNewItemAtIndex(int index) => getByIndex(newList, index);
+
+  @override
+  T getOldItemAtIndex(int index) => getByIndex(oldList, index);
 }
