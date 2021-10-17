@@ -12,15 +12,14 @@ jobs:
     runs-on: ubuntu-latest
 
 
-    strategy:
-      matrix:
-        sdk: [ dev, beta, stable ]
+    # strategy:
+    #  matrix:
+    #   sdk: [ dev, beta, stable ]
 
     steps:
       - uses: actions/checkout@v2
-      - uses: dart-lang/setup-dart@v1
-        with:
-            sdk: ${{ matrix.sdk }}
+      - uses: subosito/flutter-action@v1
+
       - name: Install dependencies
         run: dart pub get
 
@@ -32,10 +31,7 @@ jobs:
         run: dart analyze
 
       - name: Run tests
-        run: dart test
-
-      - name: coverage
-        run: dart run test_coverage --min-coverage 80
+        run: flutter test --coverage
 
       - name: Upload coverage to codecov
         run: curl -s https://codecov.io/bash | bash

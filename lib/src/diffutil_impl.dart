@@ -43,11 +43,6 @@ class _Snake {
       required this.size,
       required this.removal,
       required this.reverse});
-
-  @override
-  String toString() {
-    return 'Snake{x: $x, y: $y, size: $size, removal: $removal, reverse: $reverse}';
-  }
 }
 
 final Comparator<_Snake> _snakeComparator = (o1, o2) {
@@ -176,20 +171,20 @@ class DiffResult<T> {
   ///the updates (which is probably being called on the main thread).
   ///
   void _findMatchingItems() {
-    int? posOld = _mOldListSize;
-    int? posNew = _mNewListSize;
+    int posOld = _mOldListSize;
+    int posNew = _mNewListSize;
     // traverse the matrix from right bottom to 0,0.
     for (var i = _mSnakes.length - 1; i >= 0; i--) {
       final snake = _mSnakes[i];
       final endX = snake.x + snake.size;
       final endY = snake.y + snake.size;
       if (_mDetectMoves) {
-        while (posOld! > endX) {
+        while (posOld > endX) {
           // this is a removal. Check remaining snakes to see if this was added before
           _findAddition(posOld, posNew, i);
           posOld--;
         }
-        while (posNew! > endY) {
+        while (posNew > endY) {
           // this is an addition. Check remaining snakes to see if this was removed
           // before
           _findRemoval(posOld, posNew, i);
@@ -212,14 +207,14 @@ class DiffResult<T> {
     }
   }
 
-  void _findAddition(int x, int? y, int snakeIndex) {
+  void _findAddition(int x, int y, int snakeIndex) {
     if (_mOldItemStatuses[x - 1] != 0) {
       return; // already set by a latter item
     }
     _findMatchingItem(x, y, snakeIndex, false);
   }
 
-  void _findRemoval(int? x, int y, int snakeIndex) {
+  void _findRemoval(int x, int y, int snakeIndex) {
     if (_mNewItemStatuses[y - 1] != 0) {
       return; // already set by a latter item
     }
@@ -239,16 +234,16 @@ class DiffResult<T> {
   ///@return True if such item is found.
   ///
   bool _findMatchingItem(
-      final int? x, final int? y, final int snakeIndex, final bool removal) {
+      final int x, final int y, final int snakeIndex, final bool removal) {
     int myItemPos;
-    int? curX;
-    int? curY;
+    int curX;
+    int curY;
     if (removal) {
-      myItemPos = y! - 1;
+      myItemPos = y - 1;
       curX = x;
       curY = y - 1;
     } else {
-      myItemPos = x! - 1;
+      myItemPos = x - 1;
       curX = x - 1;
       curY = y;
     }
@@ -258,7 +253,7 @@ class DiffResult<T> {
       final endY = snake.y + snake.size;
       if (removal) {
         // check removals for a match
-        for (var pos = curX! - 1; pos >= endX; pos--) {
+        for (var pos = curX - 1; pos >= endX; pos--) {
           if (_mCallback.areItemsTheSame(pos, myItemPos)) {
             // found!
             final isSame = _mCallback.areContentsTheSame(pos, myItemPos);
@@ -271,13 +266,13 @@ class DiffResult<T> {
         }
       } else {
         // check for additions for a match
-        for (var pos = curY! - 1; pos >= endY; pos--) {
+        for (var pos = curY - 1; pos >= endY; pos--) {
           if (_mCallback.areItemsTheSame(myItemPos, pos)) {
             // found
             final isSame = _mCallback.areContentsTheSame(myItemPos, pos);
             final changeFlag =
                 isSame ? FLAG_MOVED_NOT_CHANGED : FLAG_MOVED_CHANGED;
-            _mOldItemStatuses[x! - 1] = (pos << FLAG_OFFSET) | FLAG_IGNORE;
+            _mOldItemStatuses[x - 1] = (pos << FLAG_OFFSET) | FLAG_IGNORE;
             _mNewItemStatuses[pos] = ((x - 1) << FLAG_OFFSET) | changeFlag;
             return true;
           }
@@ -376,11 +371,6 @@ class DiffResult<T> {
     return null;
   }
 
-  @override
-  String toString() {
-    return 'DiffResult{mSnakes: $_mSnakes}, ';
-  }
-
   void _dispatchRemovals(List<_PostponedUpdate> postponedUpdates,
       List<DiffUpdate> updates, int start, int count, int globalIndex) {
     if (!_mDetectMoves) {
@@ -461,8 +451,6 @@ class DiffResult<T> {
               from: start + i, to: update.currentPos - 1, data: item));
           if (status == FLAG_MOVED_CHANGED) {
             // also dispatch a change
-            //TODO fix data
-            print("_dispatchRemovalsWithData $snake $i $count $update");
             updates.add(DataDiffUpdate.change(
                 position: update.currentPos - 1,
                 oldData: item,
@@ -557,9 +545,6 @@ class DiffResult<T> {
               from: update.currentPos, to: start, data: item));
           if (status == FLAG_MOVED_CHANGED) {
             // also dispatch a change
-            //TODO fix data
-            print("_dispatchAdditionsWithData $snake $i $count $update");
-
             updates.add(DataDiffUpdate.change(
                 position: start,
                 oldData: delegate.getOldItemAtIndex(pos),
@@ -588,11 +573,6 @@ class _PostponedUpdate {
       {required this.posInOwnerList,
       required this.currentPos,
       required this.removal});
-
-  @override
-  String toString() {
-    return '_PostponedUpdate{posInOwnerList: $posInOwnerList, currentPos: $currentPos, removal: $removal}';
-  }
 }
 
 ///

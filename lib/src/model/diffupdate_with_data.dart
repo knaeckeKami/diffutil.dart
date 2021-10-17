@@ -15,10 +15,10 @@ abstract class DataDiffUpdate<T> {
 
   /// call one of the given callback functions depending on the type of this object.
   ///
-  /// @param insert callback function to be called if this object is of type [Insert]
-  /// @param remove callback function to be called if this object is of type [Remove]
-  /// @param change callback function to be called if this object is of type [Change]
-  /// @param move callback function to be called if this object is of type [Move]
+  /// @param insert callback function to be called if this object is of type [DataInsert]
+  /// @param remove callback function to be called if this object is of type [DateRemove]
+  /// @param change callback function to be called if this object is of type [DateChange]
+  /// @param move callback function to be called if this object is of type [DateMove]
   ///
   S when<S>({
     required S Function(int position, T data) insert,

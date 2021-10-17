@@ -300,6 +300,44 @@ void main() {
           newData: DataObject(id: 1, payload: 0))
     ]);
   });
+
+  test(
+      "getUpdatedWithData should throw on delegates that dont implement IndexableItemDiffDelegate...",
+      () {
+    expect(() {
+      diffutil.calculateDiff<void>(_DumbDiffDelegate()).getUpdatesWithData();
+    }, throwsException);
+  });
+}
+
+class _DumbDiffDelegate implements diffutil.DiffDelegate {
+  final List<Object> oldList = [];
+  final List<Object> newList = [];
+
+  @override
+  bool areContentsTheSame(int oldItemPosition, int newItemPosition) {
+    return true;
+  }
+
+  @override
+  bool areItemsTheSame(int oldItemPosition, int newItemPosition) {
+    return oldList[oldItemPosition] == newList[newItemPosition];
+  }
+
+  @override
+  Object? getChangePayload(int oldItemPosition, int newItemPosition) {
+    return null;
+  }
+
+  @override
+  int getNewListSize() {
+    return newList.length;
+  }
+
+  @override
+  int getOldListSize() {
+    return oldList.length;
+  }
 }
 
 class DataObjectListDiff extends diffutil.ListDiffDelegate<DataObject> {
