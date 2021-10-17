@@ -179,12 +179,12 @@ class DiffResult<T> {
       final endX = snake.x + snake.size;
       final endY = snake.y + snake.size;
       if (_mDetectMoves) {
-        while (posOld! > endX) {
+        while (posOld > endX) {
           // this is a removal. Check remaining snakes to see if this was added before
           _findAddition(posOld, posNew, i);
           posOld--;
         }
-        while (posNew! > endY) {
+        while (posNew > endY) {
           // this is an addition. Check remaining snakes to see if this was removed
           // before
           _findRemoval(posOld, posNew, i);
@@ -239,11 +239,11 @@ class DiffResult<T> {
     int curX;
     int curY;
     if (removal) {
-      myItemPos = y! - 1;
+      myItemPos = y - 1;
       curX = x;
       curY = y - 1;
     } else {
-      myItemPos = x! - 1;
+      myItemPos = x - 1;
       curX = x - 1;
       curY = y;
     }
@@ -253,7 +253,7 @@ class DiffResult<T> {
       final endY = snake.y + snake.size;
       if (removal) {
         // check removals for a match
-        for (var pos = curX! - 1; pos >= endX; pos--) {
+        for (var pos = curX - 1; pos >= endX; pos--) {
           if (_mCallback.areItemsTheSame(pos, myItemPos)) {
             // found!
             final isSame = _mCallback.areContentsTheSame(pos, myItemPos);
@@ -266,13 +266,13 @@ class DiffResult<T> {
         }
       } else {
         // check for additions for a match
-        for (var pos = curY! - 1; pos >= endY; pos--) {
+        for (var pos = curY - 1; pos >= endY; pos--) {
           if (_mCallback.areItemsTheSame(myItemPos, pos)) {
             // found
             final isSame = _mCallback.areContentsTheSame(myItemPos, pos);
             final changeFlag =
                 isSame ? FLAG_MOVED_NOT_CHANGED : FLAG_MOVED_CHANGED;
-            _mOldItemStatuses[x! - 1] = (pos << FLAG_OFFSET) | FLAG_IGNORE;
+            _mOldItemStatuses[x - 1] = (pos << FLAG_OFFSET) | FLAG_IGNORE;
             _mNewItemStatuses[pos] = ((x - 1) << FLAG_OFFSET) | changeFlag;
             return true;
           }
