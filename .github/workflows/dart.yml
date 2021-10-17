@@ -12,9 +12,9 @@ jobs:
     runs-on: ubuntu-latest
 
 
-    strategy:
-      matrix:
-        sdk: [ dev, beta, stable ]
+    # strategy:
+    #  matrix:
+    #   sdk: [ dev, beta, stable ]
 
     steps:
       - uses: actions/checkout@v2

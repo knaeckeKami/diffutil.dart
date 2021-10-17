@@ -7,3 +7,6 @@ export 'package:diffutil_dart/src/diffutil_impl.dart'
 
 export 'package:diffutil_dart/src/model/diffupdate.dart'
     show DiffUpdate, Insert, Remove, Move, Change, BatchableDiff;
+
+export 'package:diffutil_dart/src/model/diffupdate_with_data.dart'
+    show DataDiffUpdate, DataInsert, DataRemove, DataMove, DataChange;
