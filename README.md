@@ -31,13 +31,13 @@ It takes two lists and calculates the difference (or to be more accurate: edit s
 Simple usage:
 
 ```dart
-final diffResult = calculateListDiff([1, 2 ,3], [1, 3, 4]);
+final diffResult = calculateListDiff<int>([1, 2 ,3], [1, 3, 4]);
 ```
 
 Custom equality:
 
 ```dart
-final diffResult = calculateListDiff(oldList, newList, (o1, o2) => o1.id == o2.id);
+final diffResult = calculateListDiff<YourClassWithId>(oldList, newList, (o1, o2) => o1.id == o2.id);
 ```
 
 If you don't want to use plain old Dart lists (for example if you're using built_value or kt.dart), and don't want to convert your custom list 
@@ -74,10 +74,39 @@ instead of
 
 `[Insert(position: 0, count: 2)]`
 
+## Updates with data
 
-#### Using the result (legacy way)
+If you need the concrete items that have been inserted/removed/changed/moved, call `getUpdatesWithData()`.
 
-Implement `ListUpdateCallback` and call `diffResult.dispatchUpdatesTo(myCallback);`
+```dart
+
+     diffutil.calculateListDiff([1, 2, 3], [1, 0, 3]).getUpdatesWithData();
+
+```
+
+returns
+
+```dart
+      [
+        DataRemove(position: 1, data: 2),
+        DataInsert(position: 1, data: 0)
+      ];
+```
+
+The result of `getUpdatesWithData()` cannot be batched.
+You can use the resulting `Iterable<DataDiffUpdate>` like this:
+
+```dart
+ for (final update in updates) {
+      update.when(
+        insert: (pos, data) => print('insert $pos $data'),
+        remove: (pos, data) => print('remove $pos $data'),
+        change: (pos, oldData, newData) => print('change on $pos from $oldData to $newData'),
+        move: (from, to, data) => print('move $data from $from to $to'),
+      );
+    }
+
+```
 
 ## Performance metrics:
 
