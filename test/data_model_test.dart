@@ -1,6 +1,8 @@
 import 'package:diffutil_dart/diffutil.dart' as diffutil;
 import 'package:test/test.dart';
 
+//ignore_for_file: equal_elements_in_set
+
 void main() {
   test('when() works', () {
     const updates = <diffutil.DataDiffUpdate<int>>[
@@ -75,21 +77,32 @@ void main() {
   test('equals/hashcode works', () {
     expect({
       const diffutil.Insert(count: 1, position: 1),
-      const diffutil.Insert(
-          count: 1, position: 1), //ignore: equal_elements_in_set
+      const diffutil.Insert(count: 1, position: 1),
     }, hasLength(1));
     expect({
       const diffutil.Remove(count: 1, position: 1),
-      const diffutil.Remove(
-          count: 1, position: 1), //ignore: equal_elements_in_set
+      const diffutil.Remove(count: 1, position: 1),
     }, hasLength(1));
     expect({
       const diffutil.Change(position: 1),
-      const diffutil.Change(position: 1), //ignore: equal_elements_in_set
+      const diffutil.Change(position: 1),
     }, hasLength(1));
     expect({
       const diffutil.Move(from: 1, to: 2),
-      const diffutil.Move(from: 1, to: 2), //ignore: equal_elements_in_set
+      const diffutil.Move(from: 1, to: 2),
     }, hasLength(1));
+  });
+
+  test('toString()', () {
+    expect(const diffutil.DataInsert(position: 1, data: 2).toString(),
+        'Insert{position: 1, data: 2}');
+    expect(const diffutil.DataRemove(position: 1, data: 2).toString(),
+        'Remove{position: 1, data: 2}');
+    expect(
+        const diffutil.DataChange(position: 1, oldData: 2, newData: 3)
+            .toString(),
+        'Change{position: 1, old data: 2, new data: 3}');
+    expect(const diffutil.DataMove(from: 1, to: 2, data: 3).toString(),
+        'Move{from: 1, to: 2, data: 3}');
   });
 }
