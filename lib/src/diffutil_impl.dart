@@ -320,7 +320,7 @@ class DiffResult<T> {
     final delegate = _mCallback;
     if (delegate is! IndexableItemDiffDelegate<T>) {
       throw Exception(
-          "$delegate is not a IndexableItemDiffDelegate<$T>. call getUpdates instead or implement IndexableItemDiffDelegate in your DiffDelegate ");
+          "$delegate is not a IndexableItemDiffDelegate<$T>. call getUpdates() instead or implement IndexableItemDiffDelegate in your DiffDelegate ");
     }
     final updates = <DataDiffUpdate<T>>[];
     // These are add/remove ops that are converted to moves. We track their positions until

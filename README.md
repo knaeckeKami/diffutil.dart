@@ -93,7 +93,7 @@ returns
       ];
 ```
 
-The result of `getUpdatesWithData()` cannot be batched.
+The result of ``getUpdatesWithData`()` cannot be batched.
 You can use the resulting `Iterable<DataDiffUpdate>` like this:
 
 ```dart
@@ -107,6 +107,9 @@ You can use the resulting `Iterable<DataDiffUpdate>` like this:
     }
 
 ```
+
+Note that if you implement you own `DiffDelegate` and call `calculateDiff()` directly, the 
+`DiffDelegate` also needs to implement `IndexableItemDiffDelegate` if you want to call `getUpdatesWithData()`.
 
 ## Performance metrics:
 
