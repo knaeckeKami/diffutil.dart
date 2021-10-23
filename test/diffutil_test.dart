@@ -369,22 +369,3 @@ class DataObject {
   @override
   int get hashCode => id.hashCode ^ payload.hashCode;
 }
-
-class _BadDiffDelegate extends diffutil.ListDiffDelegate {
-  _BadDiffDelegate(List oldList, List newList) : super(oldList, newList);
-
-  @override
-  bool areContentsTheSame(int oldItemPosition, int newItemPosition) {
-    print('well');
-
-    this.newList.insert(0, null);
-    return super.areContentsTheSame(oldItemPosition, newItemPosition);
-  }
-
-  @override
-  bool areItemsTheSame(int oldItemPosition, int newItemPosition) {
-    this.oldList.insert(0,null);
-
-    return super.areItemsTheSame(oldItemPosition, newItemPosition);
-  }
-}
