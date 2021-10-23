@@ -61,6 +61,8 @@ abstract class DiffDelegate {
   }
 }
 
+/// you need to implement this interface if you use a custom DiffDelegate
+/// and want to call  getUpdatesWithData
 abstract class IndexableItemDiffDelegate<T> extends DiffDelegate {
   T getOldItemAtIndex(int index);
 

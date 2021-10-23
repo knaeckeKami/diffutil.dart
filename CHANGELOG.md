@@ -1,3 +1,12 @@
+## 3.0.0
+
+
+- added `DiffResult::getUpdatesWithData`. To make this work, following changes have been made: 
+    -  The functions `calculateDiff()`, `calculateListDiff`, `calculateCustomListDiff` now have an additional 
+       generic type parameter. This might be a breaking change.
+    - `DiffResult`has now a generic type parameter for the type of the data of the underlying lists
+    
+
 ## 2.0.0
 
 - stable nullsafe release
