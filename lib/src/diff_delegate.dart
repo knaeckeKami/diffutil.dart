@@ -1,3 +1,5 @@
+/// consider implementing [IndexableItemDiffDelegate] instead in order to be able
+/// to call DiffResult::getUpdatesWithData
 abstract class DiffDelegate {
   ///
   ///Returns the size of the old list.

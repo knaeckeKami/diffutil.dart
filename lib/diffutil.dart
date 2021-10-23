@@ -1,7 +1,7 @@
 library diffutil_dart;
 
 export 'package:diffutil_dart/src/diff_delegate.dart'
-    show ListDiffDelegate, DiffDelegate;
+    show ListDiffDelegate, DiffDelegate, IndexableItemDiffDelegate;
 export 'package:diffutil_dart/src/diffutil_impl.dart'
     show calculateDiff, calculateListDiff, calculateCustomListDiff, DiffResult;
 
