@@ -39,7 +39,6 @@ void main() {
       const diffutil.Move(from: 1, to: 2),
     }, hasLength(1));
 
-
     expect({
       const diffutil.Insert(count: 1, position: 1),
       const diffutil.Insert(count: 2, position: 2),
