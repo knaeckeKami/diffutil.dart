@@ -76,21 +76,38 @@ void main() {
 
   test('equals/hashcode works', () {
     expect({
-      const diffutil.Insert(count: 1, position: 1),
-      const diffutil.Insert(count: 1, position: 1),
+      const diffutil.DataInsert(data: null, position: 1),
+      const diffutil.DataInsert(data: null, position: 1),
     }, hasLength(1));
     expect({
-      const diffutil.Remove(count: 1, position: 1),
-      const diffutil.Remove(count: 1, position: 1),
+      const diffutil.DataRemove(data: null, position: 1),
+      const diffutil.DataRemove(data: null, position: 1),
     }, hasLength(1));
     expect({
-      const diffutil.Change(position: 1),
-      const diffutil.Change(position: 1),
+      const diffutil.DataChange(position: 1, oldData: null, newData: 1),
+      const diffutil.DataChange(position: 1, oldData: null, newData: 1),
     }, hasLength(1));
     expect({
-      const diffutil.Move(from: 1, to: 2),
-      const diffutil.Move(from: 1, to: 2),
+      const diffutil.DataMove(from: 1, to: 2, data: null),
+      const diffutil.DataMove(from: 1, to: 2, data: null),
     }, hasLength(1));
+
+    expect({
+      const diffutil.DataInsert(data: null, position: 1),
+      const diffutil.DataInsert(data: 1, position: 1),
+    }, hasLength(2));
+    expect({
+      const diffutil.DataRemove(data: null, position: 1),
+      const diffutil.DataRemove(data: 1, position: 1),
+    }, hasLength(2));
+    expect({
+      const diffutil.DataChange(position: 1, oldData: null, newData: 1),
+      const diffutil.DataChange(position: 1, oldData: null, newData: 2),
+    }, hasLength(2));
+    expect({
+      const diffutil.DataMove(from: 1, to: 2, data: null),
+      const diffutil.DataMove(from: 1, to: 2, data: 1),
+    }, hasLength(2));
   });
 
   test('toString()', () {
