@@ -48,9 +48,8 @@ void main() {
 
   print('\n');
 
-
-  print('difference between $oldList and $newList, with data, with move detection:');
-
+  print(
+      'difference between $oldList and $newList, with data, with move detection:');
 
   final listDiff4 = diffutil
       .calculateListDiff(oldList, newList, detectMoves: true)
