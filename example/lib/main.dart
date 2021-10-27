@@ -48,24 +48,36 @@ void main() {
 
   print('\n');
 
-  final oldList3 = [];
-  final newList3 = [1, 2, 3];
 
-  print('difference between $oldList3 and $newList3, batched:');
+  print('difference between $oldList and $newList, with data, with move detection:');
 
-  final listDiff4 =
-      diffutil.calculateListDiff(oldList3, newList3).getUpdates(batch: true);
+
+  final listDiff4 = diffutil
+      .calculateListDiff(oldList, newList, detectMoves: true)
+      .getUpdatesWithData();
 
   print('changeset: $listDiff4');
 
   print('\n');
 
-  print('difference between $oldList3 and $newList3, unbatched:');
+  final oldList3 = [];
+  final newList3 = [1, 2, 3];
+
+  print('difference between $oldList3 and $newList3, batched:');
 
   final listDiff5 =
-      diffutil.calculateListDiff(oldList3, newList3).getUpdates(batch: false);
+      diffutil.calculateListDiff(oldList3, newList3).getUpdates(batch: true);
 
   print('changeset: $listDiff5');
+
+  print('\n');
+
+  print('difference between $oldList3 and $newList3, unbatched:');
+
+  final listDiff6 =
+      diffutil.calculateListDiff(oldList3, newList3).getUpdates(batch: false);
+
+  print('changeset: $listDiff6');
 
   print('\n');
 }
