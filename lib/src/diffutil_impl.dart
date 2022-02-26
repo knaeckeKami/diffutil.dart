@@ -409,6 +409,7 @@ class DiffResult<T> {
               removal: true));
           break;
         default:
+          //coverage:ignore-line
           throw StateError(
               'unknown flag for pos  ${globalIndex + i}:  $status');
       }
@@ -464,6 +465,7 @@ class DiffResult<T> {
               removal: true));
           break;
         default:
+          //coverage:ignore-line
           throw StateError(
               'unknown flag for pos  ${globalIndex + i}:  $status');
       }
@@ -505,6 +507,7 @@ class DiffResult<T> {
               removal: false));
           break;
         default:
+          //coverage:ignore-line
           throw StateError('unknown flag for pos ${globalIndex + i}:  $status');
       }
     }
@@ -558,6 +561,7 @@ class DiffResult<T> {
               removal: false));
           break;
         default:
+          //coverage:ignore-line
           throw StateError('unknown flag for pos ${globalIndex + i}:  $status');
       }
     }
@@ -753,6 +757,7 @@ _Snake? _diffPartial(DiffDelegate cb, int startOld, int endOld, int startNew,
       }
     }
   }
+  //coverage:ignore-line
   throw StateError('''DiffUtil hit an unexpected case while trying to calculate
 the optimal path. Please make sure your data is not changing during the
 diff calculation.''');

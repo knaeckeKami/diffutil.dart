@@ -378,10 +378,10 @@ class DataObjectListDiffWithPayload
 }
 
 class DataObject {
-  final int? id;
+  final int id;
   final int? payload;
 
-  DataObject({this.id, this.payload});
+  DataObject({required this.id, this.payload});
 
   @override
   bool operator ==(Object other) =>
