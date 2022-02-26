@@ -135,8 +135,7 @@ class DataObject {
 The delegate can be implemented like this:
 
 
-```
-
+```dart
 class DataObjectListDiff extends diffutil.ListDiffDelegate<DataObject> {
   DataObjectListDiff(List<DataObject> oldList, List<DataObject> newList)
       : super(oldList, newList);
