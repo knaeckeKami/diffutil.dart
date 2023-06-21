@@ -3,24 +3,6 @@ import 'package:test/test.dart';
 
 //ignore_for_file: equal_elements_in_set
 void main() {
-  test('when() works', () {
-    const updates = <diffutil.DiffUpdate>[
-      diffutil.Insert(count: 1, position: 1),
-      diffutil.Remove(count: 1, position: 1),
-      diffutil.Change(position: 1),
-      diffutil.Move(from: 1, to: 2),
-    ];
-
-    for (final update in updates) {
-      update.when(
-        insert: (count, pos) => expect(update, isA<diffutil.Insert>()),
-        remove: (count, pos) => expect(update, isA<diffutil.Remove>()),
-        change: (count, pos) => expect(update, isA<diffutil.Change>()),
-        move: (from, to) => expect(update, isA<diffutil.Move>()),
-      );
-    }
-  });
-
   test('equals/hashcode works', () {
     expect({
       const diffutil.Insert(count: 1, position: 1),

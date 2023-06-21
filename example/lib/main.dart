@@ -1,4 +1,4 @@
-import 'package:diffutil_dart/diffutil.dart' as diffutil;
+import 'package:diffutil_dart/diffutil.dart';
 
 /// Note: This is a dart-only project, running flutter pub get will fail with an error message of a missing
 /// pubspec.yaml in the example folder. Just run pub get instead.
@@ -9,16 +9,16 @@ void main() {
 
   print('difference between $oldList and $newList, without move detection:');
 
-  final listDiff = diffutil.calculateListDiff(oldList, newList).getUpdates();
+  final listDiff = calculateListDiff(oldList, newList).getUpdates();
 
   // use the diff using a list of diff objects
   for (final update in listDiff) {
-    update.when(
-      insert: (pos, count) => print('inserted $count item on $pos'),
-      remove: (pos, count) => print('removed $count item on $pos'),
-      change: (pos, payload) => print('changed on $pos with payload $payload'),
-      move: (from, to) => print('move from $from to $to'),
-    );
+    switch(update){
+      case Insert(position: final pos, count: final count) : print('inserted $count item on $pos');
+      case Remove(position: final pos, count: final count) : print('removed $count item on $pos');
+      case Change(position: final pos, payload: final payload) : print('changed item on $pos with payload $payload');
+      case Move(from: final from, to: final to) : print('moved item from $from to $to');
+    }
   }
 
   print('changeset: $listDiff');
@@ -30,8 +30,8 @@ void main() {
 
   print('difference between $oldList2 and $newList2, without move detection:');
 
-  final listDiff2 = diffutil
-      .calculateListDiff(oldList2, newList2, detectMoves: false)
+  final listDiff2 =
+      calculateListDiff(oldList2, newList2, detectMoves: false)
       .getUpdates();
 
   print('changeset: $listDiff2');
@@ -40,8 +40,8 @@ void main() {
 
   print('difference between $oldList2 and $newList2, with move detection:');
 
-  final listDiff3 = diffutil
-      .calculateListDiff(oldList2, newList2, detectMoves: true)
+  final listDiff3 =
+calculateListDiff(oldList2, newList2, detectMoves: true)
       .getUpdates();
 
   print('changeset: $listDiff3');
@@ -51,8 +51,8 @@ void main() {
   print(
       'difference between $oldList and $newList, with data, with move detection:');
 
-  final listDiff4 = diffutil
-      .calculateListDiff(oldList, newList, detectMoves: true)
+  final listDiff4 =
+      calculateListDiff(oldList, newList, detectMoves: true)
       .getUpdatesWithData();
 
   print('changeset: $listDiff4');
@@ -65,7 +65,7 @@ void main() {
   print('difference between $oldList3 and $newList3, batched:');
 
   final listDiff5 =
-      diffutil.calculateListDiff(oldList3, newList3).getUpdates(batch: true);
+      calculateListDiff(oldList3, newList3).getUpdates(batch: true);
 
   print('changeset: $listDiff5');
 
@@ -74,7 +74,7 @@ void main() {
   print('difference between $oldList3 and $newList3, unbatched:');
 
   final listDiff6 =
-      diffutil.calculateListDiff(oldList3, newList3).getUpdates(batch: false);
+      calculateListDiff(oldList3, newList3).getUpdates(batch: false);
 
   print('changeset: $listDiff6');
 
@@ -86,8 +86,7 @@ void main() {
   print(
       'data object diff between $dataObjectList1 and $dataObjectList2, default behaviour');
 
-  print(diffutil
-      .calculateListDiff(dataObjectList1, dataObjectList2)
+  print(      calculateListDiff(dataObjectList1, dataObjectList2)
       .getUpdatesWithData());
 
   print('\n');
@@ -95,8 +94,8 @@ void main() {
   print(
       'data object diff $dataObjectList1 and $dataObjectList2, with custom delegate with that respects identity');
 
-  print(diffutil
-      .calculateDiff(DataObjectListDiff(dataObjectList1, dataObjectList2))
+  print(
+      calculateDiff(DataObjectListDiff(dataObjectList1, dataObjectList2))
       .getUpdatesWithData());
 }
 
@@ -123,7 +122,7 @@ class DataObject {
   int get hashCode => id.hashCode ^ payload.hashCode;
 }
 
-class DataObjectListDiff extends diffutil.ListDiffDelegate<DataObject> {
+class DataObjectListDiff extends ListDiffDelegate<DataObject> {
   DataObjectListDiff(List<DataObject> oldList, List<DataObject> newList)
       : super(oldList, newList);
 

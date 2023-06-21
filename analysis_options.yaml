@@ -28,10 +28,6 @@ analyzer:
   language:
     strict-inference: true
     strict-raw-types: true
-  strong-mode:
-    # never implicitly cast types down
-    implicit-casts: false
-    # never implicitly use dynamic when a type cannot be inferred, require type annotations in this case
   errors:
     missing_required_param: error
     # treat missing returns as a warning (not a hint)

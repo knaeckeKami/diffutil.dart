@@ -416,7 +416,7 @@ class DiffResult<T> {
     }
   }
 
-  void _dispatchRemovalsWithData<T>(
+  void _dispatchRemovalsWithData(
       List<_PostponedUpdate> postponedUpdates,
       List<DataDiffUpdate<T>> updates,
       IndexableItemDiffDelegate<T> delegate,

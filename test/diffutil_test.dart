@@ -1,3 +1,5 @@
+// ignore_for_file: prefer_const_constructors
+
 import 'package:diffutil_dart/diffutil.dart' as diffutil;
 import 'package:diffutil_dart/src/model/diffupdate.dart';
 import 'package:test/test.dart';
@@ -15,7 +17,7 @@ void main() {
         'empty list -> [1,2,3] should have one call to onInserted with count of 3 on position 0',
         () {
       final updates =
-          diffutil.calculateListDiff([], [1, 2, 3]).getUpdates(batch: true);
+          diffutil.calculateListDiff<int>([], [1, 2, 3]).getUpdates(batch: true);
 
       expect(updates, const [Insert(position: 0, count: 3)]);
     });
@@ -23,7 +25,7 @@ void main() {
     test(
         '[1,2,3] -> empty list should have one call to onRemoved with count of 3 on position 0',
         () {
-      final updates = diffutil.calculateListDiff([1, 2, 3], []).getUpdates();
+      final updates = diffutil.calculateListDiff<int>([1, 2, 3], []).getUpdates();
 
       expect(updates, const [diffutil.Remove(position: 0, count: 3)]);
     });
@@ -33,7 +35,7 @@ void main() {
           diffutil.calculateListDiff([1, 2, 3], [1, 0, 3]).getUpdates();
 
       expect(updates,
-          [Remove(position: 1, count: 1), Insert(position: 1, count: 1)]);
+          const [Remove(position: 1, count: 1), Insert(position: 1, count: 1)]);
     });
 
     test(
@@ -43,23 +45,23 @@ void main() {
           diffutil.calculateListDiff([1, 2, 3], [1, 3, 4, 5]).getUpdates();
 
       expect(updates,
-          [Insert(position: 3, count: 2), Remove(position: 1, count: 1)]);
+          const [Insert(position: 3, count: 2), Remove(position: 1, count: 1)]);
     });
   });
 
   group('change detection: ', () {
     test('onChanged should be called', () {
       final updates = diffutil
-          .calculateDiff(DataObjectListDiff(
+          .calculateDiff<int>(DataObjectListDiff(
               [DataObject(id: 1, payload: 0)], [DataObject(id: 1, payload: 1)]))
           .getUpdates();
 
-      expect(updates, [Change(position: 0, payload: null)]);
+      expect(updates, [const Change(position: 0, payload: null)]);
     });
 
     test('onChanged should not be called if no payload changed', () {
       final updates = diffutil
-          .calculateDiff(DataObjectListDiff(
+          .calculateDiff<int>(DataObjectListDiff(
               [DataObject(id: 1, payload: 1)], [DataObject(id: 1, payload: 1)]))
           .getUpdates();
 
@@ -68,7 +70,7 @@ void main() {
 
     test('onInserted works also with change detection', () {
       final updates = diffutil
-          .calculateDiff(DataObjectListDiff([
+          .calculateDiff<int>(DataObjectListDiff([
             DataObject(id: 1, payload: 1),
           ], [
             DataObject(id: 1, payload: 2),
@@ -84,7 +86,7 @@ void main() {
 
     test('onRemoved works also with change detection', () {
       final updates = diffutil
-          .calculateDiff(DataObjectListDiff(
+          .calculateDiff<int>(DataObjectListDiff(
               [DataObject(id: 1, payload: 1), DataObject(id: 2, payload: 2)],
               [DataObject(id: 1, payload: 2)]))
           .getUpdates();
@@ -97,7 +99,7 @@ void main() {
 
     test('onInserted and onRemoved works also with change detection', () {
       final updates = diffutil
-          .calculateDiff(DataObjectListDiff(
+          .calculateDiff<int>(DataObjectListDiff(
               [DataObject(id: 1, payload: 1), DataObject(id: 2, payload: 2)],
               [DataObject(id: 1, payload: 2), DataObject(id: 3, payload: 2)]))
           .getUpdates();
@@ -111,7 +113,7 @@ void main() {
 
     test('change detection with payload', () {
       final updates = diffutil
-          .calculateDiff(DataObjectListDiffWithPayload(
+          .calculateDiff<int>(DataObjectListDiffWithPayload(
               [DataObject(id: 1, payload: 0)], [DataObject(id: 1, payload: 1)]))
           .getUpdates();
 
@@ -197,7 +199,7 @@ void main() {
 
   test('change detection + move detection 2', () {
     final updates = diffutil
-        .calculateDiff(
+        .calculateDiff<int>(
             DataObjectListDiff([
               DataObject(id: 1, payload: 1),
               DataObject(id: 2, payload: 2)
@@ -218,7 +220,7 @@ void main() {
 
   test('change detection + move detection 3', () {
     final updates = diffutil
-        .calculateDiff(
+        .calculateDiff<int>(
             DataObjectListDiff([
               DataObject(id: 1, payload: 1),
               DataObject(id: 3, payload: 0),
@@ -248,7 +250,7 @@ void main() {
           isEmpty);
 
       var updates = diffutil
-          .calculateDiff(
+          .calculateDiff<int>(
               DataObjectListDiff([
                 DataObject(id: 1, payload: 1),
                 DataObject(id: 2, payload: 2)
@@ -282,7 +284,7 @@ void main() {
     test(
         'empty list -> [1,2,3] should have one call to onInserted with count of 3 on position 0',
         () {
-      final updates = diffutil.calculateListDiff([], [1, 2, 3]).getUpdates();
+      final updates = diffutil.calculateListDiff<int>([], [1, 2, 3]).getUpdates();
 
       expect(updates, const [DiffUpdate.insert(position: 0, count: 3)]);
     });
@@ -291,7 +293,7 @@ void main() {
         '[1,2,3] -> empty list should have one call to onRemoved with count of 3 on position 0',
         () {
       final updates = diffutil
-          .calculateListDiff([1, 2, 3], [])
+          .calculateListDiff<int>([1, 2, 3], [])
           .getUpdates(batch: true)
           .toList();
 
@@ -302,7 +304,7 @@ void main() {
         '[1,2,3] -> empty list should have 3 remove operations when noch batched',
         () {
       final updates = diffutil
-          .calculateListDiff([1, 2, 3], [])
+          .calculateListDiff<int>([1, 2, 3], [])
           .getUpdates(batch: false)
           .toList();
 
