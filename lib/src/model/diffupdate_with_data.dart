@@ -1,4 +1,4 @@
-abstract class DataDiffUpdate<T> {
+sealed class DataDiffUpdate<T> {
   const factory DataDiffUpdate.insert(
       {required int position, required T data}) = DataInsert;
 

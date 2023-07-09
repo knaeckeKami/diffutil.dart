@@ -1,4 +1,4 @@
-abstract class DiffUpdate {
+sealed class DiffUpdate {
   const factory DiffUpdate.insert({required int position, required int count}) =
       Insert;
 

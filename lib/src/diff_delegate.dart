@@ -1,6 +1,6 @@
 /// consider implementing [IndexableItemDiffDelegate] instead in order to be able
 /// to call DiffResult::getUpdatesWithData
-abstract class DiffDelegate {
+abstract interface class DiffDelegate {
   ///
   ///Returns the size of the old list.
   ///
@@ -63,7 +63,7 @@ abstract class DiffDelegate {
 
 /// you need to implement this interface if you use a custom DiffDelegate
 /// and want to call  getUpdatesWithData
-abstract class IndexableItemDiffDelegate<T> extends DiffDelegate {
+abstract interface class IndexableItemDiffDelegate<T> extends DiffDelegate {
   T getOldItemAtIndex(int index);
 
   T getNewItemAtIndex(int index);

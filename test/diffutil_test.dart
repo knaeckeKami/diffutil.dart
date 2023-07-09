@@ -32,8 +32,10 @@ void main() {
       final updates =
           diffutil.calculateListDiff([1, 2, 3], [1, 0, 3]).getUpdates();
 
-      expect(updates,
-          [Remove(position: 1, count: 1), Insert(position: 1, count: 1)]);
+      expect(updates, [
+        const Remove(position: 1, count: 1),
+        const Insert(position: 1, count: 1)
+      ]);
     });
 
     test(
@@ -42,24 +44,26 @@ void main() {
       final updates =
           diffutil.calculateListDiff([1, 2, 3], [1, 3, 4, 5]).getUpdates();
 
-      expect(updates,
-          [Insert(position: 3, count: 2), Remove(position: 1, count: 1)]);
+      expect(updates, [
+        const Insert(position: 3, count: 2),
+        const Remove(position: 1, count: 1)
+      ]);
     });
   });
 
   group('change detection: ', () {
     test('onChanged should be called', () {
       final updates = diffutil
-          .calculateDiff(DataObjectListDiff(
+          .calculateDiff<DataObject>(DataObjectListDiff(
               [DataObject(id: 1, payload: 0)], [DataObject(id: 1, payload: 1)]))
           .getUpdates();
 
-      expect(updates, [Change(position: 0, payload: null)]);
+      expect(updates, [const Change(position: 0, payload: null)]);
     });
 
     test('onChanged should not be called if no payload changed', () {
       final updates = diffutil
-          .calculateDiff(DataObjectListDiff(
+          .calculateDiff<DataObject>(DataObjectListDiff(
               [DataObject(id: 1, payload: 1)], [DataObject(id: 1, payload: 1)]))
           .getUpdates();
 
@@ -68,7 +72,7 @@ void main() {
 
     test('onInserted works also with change detection', () {
       final updates = diffutil
-          .calculateDiff(DataObjectListDiff([
+          .calculateDiff<DataObject>(DataObjectListDiff([
             DataObject(id: 1, payload: 1),
           ], [
             DataObject(id: 1, payload: 2),
@@ -77,45 +81,45 @@ void main() {
           .getUpdates();
 
       expect(updates, [
-        Insert(position: 1, count: 1),
-        Change(position: 0, payload: null),
+        const Insert(position: 1, count: 1),
+        const Change(position: 0, payload: null),
       ]);
     });
 
     test('onRemoved works also with change detection', () {
       final updates = diffutil
-          .calculateDiff(DataObjectListDiff(
+          .calculateDiff<DataObject>(DataObjectListDiff(
               [DataObject(id: 1, payload: 1), DataObject(id: 2, payload: 2)],
               [DataObject(id: 1, payload: 2)]))
           .getUpdates();
 
       expect(updates, [
-        Remove(position: 1, count: 1),
-        Change(position: 0, payload: null),
+        const Remove(position: 1, count: 1),
+        const Change(position: 0, payload: null),
       ]);
     });
 
     test('onInserted and onRemoved works also with change detection', () {
       final updates = diffutil
-          .calculateDiff(DataObjectListDiff(
+          .calculateDiff<DataObject>(DataObjectListDiff(
               [DataObject(id: 1, payload: 1), DataObject(id: 2, payload: 2)],
               [DataObject(id: 1, payload: 2), DataObject(id: 3, payload: 2)]))
           .getUpdates();
 
       expect(updates, [
-        Remove(position: 1, count: 1),
-        Insert(count: 1, position: 1),
-        Change(position: 0),
+        const Remove(position: 1, count: 1),
+        const Insert(count: 1, position: 1),
+        const Change(position: 0),
       ]);
     });
 
     test('change detection with payload', () {
       final updates = diffutil
-          .calculateDiff(DataObjectListDiffWithPayload(
+          .calculateDiff<DataObject>(DataObjectListDiffWithPayload(
               [DataObject(id: 1, payload: 0)], [DataObject(id: 1, payload: 1)]))
           .getUpdates();
 
-      expect(updates, [Change(position: 0, payload: 1)]);
+      expect(updates, [const Change(position: 0, payload: 1)]);
     });
   });
 
@@ -124,7 +128,7 @@ void main() {
       final updates = diffutil
           .calculateListDiff([1, 2], [2, 1], detectMoves: true).getUpdates();
 
-      expect(updates, [Move(from: 1, to: 0)]);
+      expect(updates, [const Move(from: 0, to: 1)]);
     });
 
     test('should detect moves and inserts', () {
@@ -138,11 +142,11 @@ void main() {
       ], detectMoves: true).getUpdates();
 
       expect(updates, [
-        Move(
+        const Move(
           from: 1,
           to: 0,
         ),
-        Insert(position: 0, count: 1)
+        const Insert(position: 0, count: 1)
       ]);
     });
 
@@ -151,9 +155,9 @@ void main() {
           detectMoves: true).getUpdates();
 
       expect(updates, [
-        Remove(position: 3, count: 1),
-        Remove(position: 0, count: 1),
-        Move(from: 1, to: 0)
+        const Remove(position: 3, count: 1),
+        const Move(from: 1, to: 2),
+        const Remove(position: 0, count: 1),
       ]);
     });
   });
@@ -188,16 +192,16 @@ void main() {
         .getUpdates();
 
     expect(updates, const [
-      Insert(position: 1, count: 1),
-      Move(from: 2, to: 0),
-      Change(position: 0, payload: null),
+      Insert(position: 2, count: 1),
+      Change(position: 1, payload: null),
+      Move(from: 0, to: 1),
       Insert(position: 0, count: 1)
     ]);
   });
 
   test('change detection + move detection 2', () {
     final updates = diffutil
-        .calculateDiff(
+        .calculateDiff<DataObject>(
             DataObjectListDiff([
               DataObject(id: 1, payload: 1),
               DataObject(id: 2, payload: 2)
@@ -210,15 +214,15 @@ void main() {
         .getUpdates();
 
     expect(updates, [
-      Insert(position: 2, count: 1),
-      Change(position: 1, payload: null),
-      Change(position: 0, payload: null)
+      const Insert(position: 2, count: 1),
+      const Change(position: 0, payload: null),
+      const Change(position: 1, payload: null),
     ]);
   });
 
   test('change detection + move detection 3', () {
     final updates = diffutil
-        .calculateDiff(
+        .calculateDiff<DataObject>(
             DataObjectListDiff([
               DataObject(id: 1, payload: 1),
               DataObject(id: 3, payload: 0),
@@ -231,10 +235,10 @@ void main() {
         .getUpdates();
 
     expect(updates, [
-      Remove(position: 2, count: 1),
-      Change(position: 1, payload: null),
-      Move(from: 0, to: 1),
-      Change(position: 1, payload: null)
+      const Remove(position: 2, count: 1),
+      const Change(position: 1, payload: null),
+      const Move(from: 0, to: 1),
+      const Change(position: 1, payload: null)
     ]);
   });
 
@@ -248,7 +252,7 @@ void main() {
           isEmpty);
 
       var updates = diffutil
-          .calculateDiff(
+          .calculateDiff<DataObject>(
               DataObjectListDiff([
                 DataObject(id: 1, payload: 1),
                 DataObject(id: 2, payload: 2)
@@ -263,8 +267,8 @@ void main() {
 
       expect(updates, const [
         DiffUpdate.insert(position: 2, count: 1),
-        DiffUpdate.change(position: 1, payload: null),
         DiffUpdate.change(position: 0, payload: null),
+        DiffUpdate.change(position: 1, payload: null),
       ]);
 
       updates = diffutil
@@ -274,8 +278,8 @@ void main() {
 
       expect(updates, const [
         DiffUpdate.remove(position: 3, count: 1),
+        DiffUpdate.move(from: 1, to: 2),
         DiffUpdate.remove(position: 0, count: 1),
-        DiffUpdate.move(from: 1, to: 0),
       ]);
     });
 
@@ -311,6 +315,23 @@ void main() {
         DiffUpdate.remove(position: 1, count: 1),
         DiffUpdate.remove(position: 0, count: 1)
       ]);
+    });
+  });
+
+  group("regression tests", () {
+    test(
+        "github issue #15 https://github.com/knaeckeKami/diffutil.dart/issues/15",
+        () {
+      expect(
+        diffutil
+            .calculateListDiff([1, 0, 2, 0, 3], [1, 0, 3], detectMoves: false)
+            .getUpdates(batch: false)
+            .toList(),
+        const [
+          Remove(position: 2, count: 1),
+          Remove(position: 1, count: 1),
+        ],
+      );
     });
   });
 }

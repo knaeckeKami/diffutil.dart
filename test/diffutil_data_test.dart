@@ -66,9 +66,9 @@ void main() {
 
       expect(updates, const [
         DataRemove(position: 3, data: 3),
-        DataRemove(position: 2, data: 2),
+        DataInsert(position: 3, data: 1),
+        DataRemove(position: 1, data: 1),
         DataRemove(position: 0, data: 0),
-        DataInsert(position: 0, data: 2),
       ]);
     });
   });
@@ -169,7 +169,7 @@ void main() {
       final updates = diffutil.calculateListDiff([1, 2], [2, 1],
           detectMoves: true).getUpdatesWithData();
 
-      expect(updates, const [DataMove(from: 1, to: 0, data: 2)]);
+      expect(updates, const [DataMove(from: 0, to: 1, data: 1)]);
     });
 
     test('should detect moves and inserts', () {
@@ -194,8 +194,8 @@ void main() {
 
       expect(updates, const [
         DataRemove(position: 3, data: 3),
+        DataMove(from: 1, to: 2, data: 1),
         DataRemove(position: 0, data: 0),
-        DataMove(from: 1, to: 0, data: 2)
       ]);
     });
   });
@@ -231,12 +231,12 @@ void main() {
         .getUpdatesWithData();
 
     expect(updates, <DataDiffUpdate<DataObject>>[
-      DataInsert(position: 1, data: DataObject(id: 3, payload: 2)),
-      DataMove(from: 2, to: 0, data: DataObject(id: 2, payload: 3)),
+      DataInsert(position: 2, data: DataObject(id: 3, payload: 2)),
       DataChange(
-          position: 0,
+          position: 1,
           oldData: DataObject(id: 2, payload: 2),
           newData: DataObject(id: 2, payload: 3)),
+      DataMove(from: 0, to: 1, data: DataObject(id: 1, payload: 1)),
       DataInsert(
         position: 0,
         data: DataObject(id: 0, payload: -1),
@@ -261,14 +261,14 @@ void main() {
     expect(updates, [
       DataInsert(position: 2, data: DataObject(id: 1, payload: 1)),
       DataChange(
-        position: 1,
-        oldData: DataObject(id: 2, payload: 2),
-        newData: DataObject(id: 2, payload: 3),
-      ),
-      DataChange(
         position: 0,
         oldData: DataObject(id: 1, payload: 1),
         newData: DataObject(id: 1, payload: 0),
+      ),
+      DataChange(
+        position: 1,
+        oldData: DataObject(id: 2, payload: 2),
+        newData: DataObject(id: 2, payload: 3),
       ),
     ]);
   });
@@ -307,6 +307,23 @@ void main() {
     expect(() {
       diffutil.calculateDiff<void>(_DumbDiffDelegate()).getUpdatesWithData();
     }, throwsException);
+  });
+
+  group("regression tests", () {
+    test(
+        "github issue #15 https://github.com/knaeckeKami/diffutil.dart/issues/15",
+        () {
+      expect(
+        diffutil
+            .calculateListDiff([1, 0, 2, 0, 3], [1, 0, 3], detectMoves: false)
+            .getUpdatesWithData()
+            .toList(),
+        const [
+          DataRemove(position: 2, data: 2),
+          DataRemove(position: 1, data: 0),
+        ],
+      );
+    });
   });
 }
 
