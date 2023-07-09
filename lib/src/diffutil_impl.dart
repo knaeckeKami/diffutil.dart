@@ -7,7 +7,6 @@ import 'package:diffutil_dart/src/diff_delegate.dart';
 import 'package:diffutil_dart/src/model/diffupdate.dart';
 import 'package:diffutil_dart/src/model/diffupdate_with_data.dart';
 
-
 ///Snakes represent a match between two lists. It is optionally prefixed or postfixed with an
 ///add or remove operation. See the Myers' paper for details.
 ///
@@ -16,14 +15,13 @@ final class _Snake {
   int startX;
 
   /// Position in the new list
-   int startY;
+  int startY;
 
   /// End position in the old list, exclusive
-   int endX;
+  int endX;
 
   /// End position in the new list, exclusive
-   int endY;
-
+  int endY;
 
   bool reverse;
 
@@ -50,13 +48,13 @@ final class _Snake {
     if (hasAdditionOrRemoval()) {
       if (reverse) {
         // snake edge it at the end
-        return  _Diagonal(startX, startY, diagonalSize());
+        return _Diagonal(startX, startY, diagonalSize());
       } else {
         // snake edge it at the beginning
         if (isAddition()) {
-          return  _Diagonal(startX, startY + 1, diagonalSize());
+          return _Diagonal(startX, startY + 1, diagonalSize());
         } else {
-          return  _Diagonal(startX + 1, startY, diagonalSize());
+          return _Diagonal(startX + 1, startY, diagonalSize());
         }
       }
     } else {
@@ -89,7 +87,7 @@ final class _Diagonal {
 }
 
 @pragma("vm:prefer-inline")
-int _diagonalComparator (_Diagonal o1, _Diagonal o2) {
+int _diagonalComparator(_Diagonal o1, _Diagonal o2) {
   return o1.x - o2.x;
 }
 
@@ -143,8 +141,6 @@ final class _CenteredArray {
   }
 }
 
-
-
 ///
 ///This class holds the information about the result of a
 /// calculateDiff call.
@@ -178,7 +174,6 @@ class DiffResult<T> {
   // Item move
   static const int FLAG_MOVED = FLAG_MOVED_CHANGED | FLAG_MOVED_NOT_CHANGED;
 
-
   // since we are re-using the int arrays that were created in the Myers' step, we mask
   // change flags
   static const int FLAG_OFFSET = 4;
@@ -208,8 +203,8 @@ class DiffResult<T> {
   ///@param newItemStatuses An int[] that can be re-purposed to keep metadata
   ///@param detectMoves True if this DiffResult will try to detect moved items
   ///
-  DiffResult._(DiffDelegate callback, List<_Diagonal> diagonals, List<int> oldItemStatuses,
-      List<int> newItemStatuses, bool detectMoves)
+  DiffResult._(DiffDelegate callback, List<_Diagonal> diagonals,
+      List<int> oldItemStatuses, List<int> newItemStatuses, bool detectMoves)
       : _mDiagonals = diagonals,
         _mOldItemStatuses = oldItemStatuses,
         _mNewItemStatuses = newItemStatuses,
@@ -287,13 +282,14 @@ class DiffResult<T> {
       final _Diagonal diagonal = _mDiagonals[i];
       while (posY < diagonal.y) {
         // found some additions, evaluate
-        if (_mNewItemStatuses[posY] == 0) { // not evaluated yet
+        if (_mNewItemStatuses[posY] == 0) {
+          // not evaluated yet
           final matching = _mCallback.areItemsTheSame(posX, posY);
           if (matching) {
             // yay found it, set values
             final contentsMatching = _mCallback.areContentsTheSame(posX, posY);
-            final int changeFlag = contentsMatching ? FLAG_MOVED_NOT_CHANGED
-                : FLAG_MOVED_CHANGED;
+            final int changeFlag =
+                contentsMatching ? FLAG_MOVED_NOT_CHANGED : FLAG_MOVED_CHANGED;
             // once we process one of these, it will mark the other one as ignored.
             _mOldItemStatuses[posX] = (posY << FLAG_OFFSET) | changeFlag;
             _mNewItemStatuses[posY] = (posX << FLAG_OFFSET) | changeFlag;
@@ -305,7 +301,6 @@ class DiffResult<T> {
       posY = diagonal.endY();
     }
   }
-
 
   Iterable<DiffUpdate> getUpdates({bool batch = true}) {
     final updates = <DiffUpdate>[];
@@ -322,7 +317,9 @@ class DiffResult<T> {
     // iterate from end of the list to the beginning.
     // this just makes offsets easier since changes in the earlier indices has an effect
     // on the later indices.
-    for (int diagonalIndex = _mDiagonals.length - 1; diagonalIndex >= 0; diagonalIndex--) {
+    for (int diagonalIndex = _mDiagonals.length - 1;
+        diagonalIndex >= 0;
+        diagonalIndex--) {
       final _Diagonal diagonal = _mDiagonals[(diagonalIndex)];
       final int endX = diagonal.endX();
       final int endY = diagonal.endY();
@@ -336,23 +333,25 @@ class DiffResult<T> {
         if ((status & FLAG_MOVED) != 0) {
           final int newPos = status >> FLAG_OFFSET;
           // get postponed addition
-          final _PostponedUpdate? postponedUpdate = getPostponedUpdate(postponedUpdates,
-              newPos, false);
+          final _PostponedUpdate? postponedUpdate =
+              getPostponedUpdate(postponedUpdates, newPos, false);
           if (postponedUpdate != null) {
             // this is an addition that was postponed. Now dispatch it.
-            final int updatedNewPos = currentListSize - postponedUpdate.currentPos;
-            updates.add(Move(from: posX, to: updatedNewPos -1));
+            final int updatedNewPos =
+                currentListSize - postponedUpdate.currentPos;
+            updates.add(Move(from: posX, to: updatedNewPos - 1));
             if ((status & FLAG_MOVED_CHANGED) != 0) {
-              final Object? changePayload = _mCallback.getChangePayload(posX, newPos);
-              updates.add(Change(position: updatedNewPos - 1, payload: changePayload));
+              final Object? changePayload =
+                  _mCallback.getChangePayload(posX, newPos);
+              updates.add(
+                  Change(position: updatedNewPos - 1, payload: changePayload));
             }
           } else {
             // first time we are seeing this, we'll see a matching addition
             postponedUpdates.add(_PostponedUpdate(
                 posInOwnerList: posX,
                 currentPos: currentListSize - posX - 1,
-                removal: true
-            ));
+                removal: true));
           }
         } else {
           // simple removal
@@ -369,24 +368,25 @@ class DiffResult<T> {
           // see if this is postponed
           final int oldPos = status >> FLAG_OFFSET;
           // get postponed removal
-          final _PostponedUpdate? postponedUpdate = getPostponedUpdate(postponedUpdates,
-              oldPos, true);
+          final _PostponedUpdate? postponedUpdate =
+              getPostponedUpdate(postponedUpdates, oldPos, true);
           // empty size returns 0 for indexOf
           if (postponedUpdate == null) {
             // postpone it until we see the removal
             postponedUpdates.add(_PostponedUpdate(
                 posInOwnerList: posY,
-               currentPos: currentListSize - posX,
-                removal: false
-            ));
+                currentPos: currentListSize - posX,
+                removal: false));
           } else {
             // oldPosFromEnd = foundListSize - posX
             // we can find posX if we swap the list sizes
             // posX = listSize - oldPosFromEnd
-            final int updatedOldPos = currentListSize - postponedUpdate.currentPos - 1;
+            final int updatedOldPos =
+                currentListSize - postponedUpdate.currentPos - 1;
             updates.add(Move(from: updatedOldPos, to: posX));
             if ((status & FLAG_MOVED_CHANGED) != 0) {
-              final Object? changePayload = _mCallback.getChangePayload(oldPos, posY);
+              final Object? changePayload =
+                  _mCallback.getChangePayload(oldPos, posY);
               updates.add(Change(position: posX, payload: changePayload));
             }
           }
@@ -435,9 +435,10 @@ class DiffResult<T> {
     // iterate from end of the list to the beginning.
     // this just makes offsets easier since changes in the earlier indices has an effect
     // on the later indices.
-    for (int diagonalIndex = _mDiagonals.length - 1; diagonalIndex >= 0; diagonalIndex--) {
+    for (int diagonalIndex = _mDiagonals.length - 1;
+        diagonalIndex >= 0;
+        diagonalIndex--) {
       final _Diagonal diagonal = _mDiagonals[(diagonalIndex)];
-
 
       final int endX = diagonal.endX();
       final int endY = diagonal.endY();
@@ -452,15 +453,18 @@ class DiffResult<T> {
         if ((status & FLAG_MOVED) != 0) {
           final int newPos = status >> FLAG_OFFSET;
           // get postponed addition
-          final _PostponedUpdate? postponedUpdate = getPostponedUpdate(postponedUpdates,
-              newPos, false);
+          final _PostponedUpdate? postponedUpdate =
+              getPostponedUpdate(postponedUpdates, newPos, false);
           if (postponedUpdate != null) {
             // this is an addition that was postponed. Now dispatch it.
-            final int updatedNewPos = currentListSize - postponedUpdate.currentPos;
-            updates.add(DataMove(from: posX, to: updatedNewPos -1, data: item));
+            final int updatedNewPos =
+                currentListSize - postponedUpdate.currentPos;
+            updates
+                .add(DataMove(from: posX, to: updatedNewPos - 1, data: item));
             if ((status & FLAG_MOVED_CHANGED) != 0) {
-              updates.add(DataChange(position: updatedNewPos - 1,
-               newData: delegate.getNewItemAtIndex(newPos),
+              updates.add(DataChange(
+                position: updatedNewPos - 1,
+                newData: delegate.getNewItemAtIndex(newPos),
                 oldData: item,
               ));
             }
@@ -469,8 +473,7 @@ class DiffResult<T> {
             postponedUpdates.add(_PostponedUpdate(
                 posInOwnerList: posX,
                 currentPos: currentListSize - posX - 1,
-                removal: true
-            ));
+                removal: true));
           }
         } else {
           // simple removal
@@ -489,25 +492,27 @@ class DiffResult<T> {
           // see if this is postponed
           final int oldPos = status >> FLAG_OFFSET;
           // get postponed removal
-          final _PostponedUpdate? postponedUpdate = getPostponedUpdate(postponedUpdates,
-              oldPos, true);
+          final _PostponedUpdate? postponedUpdate =
+              getPostponedUpdate(postponedUpdates, oldPos, true);
           // empty size returns 0 for indexOf
           if (postponedUpdate == null) {
             // postpone it until we see the removal
             postponedUpdates.add(_PostponedUpdate(
                 posInOwnerList: posY,
                 currentPos: currentListSize - posX,
-                removal: false
-            ));
+                removal: false));
           } else {
             // oldPosFromEnd = foundListSize - posX
             // we can find posX if we swap the list sizes
             // posX = listSize - oldPosFromEnd
-            final int updatedOldPos = currentListSize - postponedUpdate.currentPos - 1;
+            final int updatedOldPos =
+                currentListSize - postponedUpdate.currentPos - 1;
             updates.add(DataMove(from: updatedOldPos, to: posX, data: item));
             if ((status & FLAG_MOVED_CHANGED) != 0) {
               updates.add(DataDiffUpdate.change(
-                  position: posX, oldData: delegate.getOldItemAtIndex(oldPos), newData: item));
+                  position: posX,
+                  oldData: delegate.getOldItemAtIndex(oldPos),
+                  newData: item));
             }
           }
         } else {
@@ -523,8 +528,9 @@ class DiffResult<T> {
         // dispatch changes
         if ((_mOldItemStatuses[posX] & FLAG_MASK) == FLAG_CHANGED) {
           updates.add(DataDiffUpdate.change(
-              position: posX, oldData: delegate.getOldItemAtIndex(posX), newData:
-              delegate.getNewItemAtIndex(posY)));
+              position: posX,
+              oldData: delegate.getOldItemAtIndex(posX),
+              newData: delegate.getNewItemAtIndex(posY)));
           //updates.add(Change(position: posX, payload: changePayload));
         }
         posX++;
@@ -537,14 +543,11 @@ class DiffResult<T> {
     return updates;
   }
 
-
-  _PostponedUpdate? getPostponedUpdate(List<_PostponedUpdate> postponedUpdates,
-      int posInList,
-      bool removal) {
-    _PostponedUpdate? postponedUpdate ;
+  _PostponedUpdate? getPostponedUpdate(
+      List<_PostponedUpdate> postponedUpdates, int posInList, bool removal) {
+    _PostponedUpdate? postponedUpdate;
 
     int i = 0;
-
 
     while (i < postponedUpdates.length) {
       final update = postponedUpdates.elementAt(i);
@@ -573,7 +576,10 @@ class _PostponedUpdate {
   int currentPos;
   final bool removal;
 
-  _PostponedUpdate({required this.posInOwnerList, required this.currentPos, required this.removal});
+  _PostponedUpdate(
+      {required this.posInOwnerList,
+      required this.currentPos,
+      required this.removal});
 }
 
 ///
@@ -596,13 +602,17 @@ DiffResult<T> calculateDiff<T>(DiffDelegate cb, {bool detectMoves = false}) {
   // instead of a recursive implementation, we keep our own stack to avoid potential stack
   // overflow exceptions
   final stack = <_Range>[];
-  stack.add(_Range(oldListStart: 0, oldListEnd: oldSize, newListStart: 0, newListEnd: newSize));
+  stack.add(_Range(
+      oldListStart: 0,
+      oldListEnd: oldSize,
+      newListStart: 0,
+      newListEnd: newSize));
   final max = (oldSize + newSize + 1) ~/ 2;
   // allocate forward and backward k-lines. K lines are diagonal lines in the matrix. (see the
   // paper for details)
   // These arrays lines keep the max reachable position for each k-line.
-  final  forward =  _CenteredArray(max * 2 + 1);
-  final  backward =  _CenteredArray(max * 2 + 1);
+  final forward = _CenteredArray(max * 2 + 1);
+  final backward = _CenteredArray(max * 2 + 1);
   // We pool the ranges to avoid allocations for each recursive call.
   final rangePool = <_Range>[];
   while (stack.isNotEmpty) {
@@ -616,9 +626,9 @@ DiffResult<T> calculateDiff<T>(DiffDelegate cb, {bool detectMoves = false}) {
       }
 
       // add new ranges for left and right
-      final _Range left = rangePool.isEmpty ?  _Range.empty()
-          : rangePool.removeAt(
-          rangePool.length - 1);
+      final _Range left = rangePool.isEmpty
+          ? _Range.empty()
+          : rangePool.removeAt(rangePool.length - 1);
       left.oldListStart = range.oldListStart;
       left.newListStart = range.newListStart;
       left.oldListEnd = snake.startX;
@@ -637,13 +647,10 @@ DiffResult<T> calculateDiff<T>(DiffDelegate cb, {bool detectMoves = false}) {
     } else {
       rangePool.add(range);
     }
-
   }
   diagonals.sort(_diagonalComparator);
 
-  return  DiffResult._(cb, diagonals,
-      forward.data, backward.data,
-      detectMoves);
+  return DiffResult._(cb, diagonals, forward.data, backward.data, detectMoves);
 }
 
 /// calculate the difference between the two given lists.
@@ -723,12 +730,7 @@ extension _Batch on Iterable<DiffUpdate> {
   }
 }
 
-
-
-_Snake? midPoint(
-    _Range range,
-    DiffDelegate cb,
-    _CenteredArray forward,
+_Snake? midPoint(_Range range, DiffDelegate cb, _CenteredArray forward,
     _CenteredArray backward) {
   if (range.oldSize() < 1 || range.newSize() < 1) {
     return null;
@@ -749,14 +751,8 @@ _Snake? midPoint(
   return null;
 }
 
-
-
-_Snake? forwardSnake(
-    _Range range,
-    DiffDelegate cb,
-    _CenteredArray forward,
-    _CenteredArray backward,
-    int d) {
+_Snake? forwardSnake(_Range range, DiffDelegate cb, _CenteredArray forward,
+    _CenteredArray backward, int d) {
   final bool checkForSnake = (range.oldSize() - range.newSize()).abs() % 2 == 1;
   final delta = range.oldSize() - range.newSize();
   for (int k = -d; k <= d; k += 2) {
@@ -777,9 +773,9 @@ _Snake? forwardSnake(
     y = range.newListStart + (x - range.oldListStart) - k;
     startY = (d == 0 || x != startX) ? y : y - 1;
     // now find snake size
-    while (x < range.oldListEnd
-        && y < range.newListEnd
-        && cb.areItemsTheSame(x, y)) {
+    while (x < range.oldListEnd &&
+        y < range.newListEnd &&
+        cb.areItemsTheSame(x, y)) {
       x++;
       y++;
     }
@@ -790,16 +786,12 @@ _Snake? forwardSnake(
       // mapping function: delta - k
       final backwardsK = delta - k;
       // if backwards K is calculated and it passed me, found match
-      if (backwardsK >= -d + 1
-          && backwardsK <= d - 1
-          && backward[(backwardsK)] <= x) {
+      if (backwardsK >= -d + 1 &&
+          backwardsK <= d - 1 &&
+          backward[(backwardsK)] <= x) {
         // match
         final snake = _Snake(
-        startX: startX,
-        startY: startY,
-        endX : x,
-        endY : y,
-        reverse : false);
+            startX: startX, startY: startY, endX: x, endY: y, reverse: false);
         return snake;
       }
     }
@@ -807,13 +799,8 @@ _Snake? forwardSnake(
   return null;
 }
 
-
-_Snake? backwardSnake(
-    _Range range,
-    DiffDelegate cb,
-    _CenteredArray forward,
-    _CenteredArray backward,
-    int d) {
+_Snake? backwardSnake(_Range range, DiffDelegate cb, _CenteredArray forward,
+    _CenteredArray backward, int d) {
   final checkForSnake = (range.oldSize() - range.newSize()) % 2 == 0;
   final delta = range.oldSize() - range.newSize();
   // same as forward but we go backwards from end of the lists to be beginning
@@ -838,9 +825,9 @@ _Snake? backwardSnake(
     y = range.newListEnd - ((range.oldListEnd - x) - k);
     startY = (d == 0 || x != startX) ? y : y + 1;
     // now find snake size
-    while (x > range.oldListStart
-        && y > range.newListStart
-        && cb.areItemsTheSame(x - 1, y - 1)) {
+    while (x > range.oldListStart &&
+        y > range.newListStart &&
+        cb.areItemsTheSame(x - 1, y - 1)) {
       x--;
       y--;
     }
@@ -851,17 +838,15 @@ _Snake? backwardSnake(
       // mapping function: delta - k
       final forwardsK = delta - k;
       // if forwards K is calculated and it passed me, found match
-      if (forwardsK >= -d
-          && forwardsK <= d
-          && forward[(forwardsK)] >= x) {
+      if (forwardsK >= -d && forwardsK <= d && forward[(forwardsK)] >= x) {
         // match
         final snake = _Snake(
-        // assignment are reverse since we are a reverse snake
-        startX : x,
-        startY : y,
-        endX : startX,
-        endY : startY,
-        reverse : true);
+            // assignment are reverse since we are a reverse snake
+            startX: x,
+            startY: y,
+            endX: startX,
+            endY: startY,
+            reverse: true);
         return snake;
       }
     }

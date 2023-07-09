@@ -69,7 +69,6 @@ void main() {
         DataInsert(position: 3, data: 1),
         DataRemove(position: 1, data: 1),
         DataRemove(position: 0, data: 0),
-
       ]);
     });
   });
@@ -197,7 +196,6 @@ void main() {
         DataRemove(position: 3, data: 3),
         DataMove(from: 1, to: 2, data: 1),
         DataRemove(position: 0, data: 0),
-
       ]);
     });
   });
@@ -239,7 +237,6 @@ void main() {
           oldData: DataObject(id: 2, payload: 2),
           newData: DataObject(id: 2, payload: 3)),
       DataMove(from: 0, to: 1, data: DataObject(id: 1, payload: 1)),
-
       DataInsert(
         position: 0,
         data: DataObject(id: 0, payload: -1),
@@ -263,7 +260,6 @@ void main() {
 
     expect(updates, [
       DataInsert(position: 2, data: DataObject(id: 1, payload: 1)),
-
       DataChange(
         position: 0,
         oldData: DataObject(id: 1, payload: 1),
@@ -314,22 +310,21 @@ void main() {
   });
 
   group("regression tests", () {
-
-
-    test("github issue #15 https://github.com/knaeckeKami/diffutil.dart/issues/15", (){
-
+    test(
+        "github issue #15 https://github.com/knaeckeKami/diffutil.dart/issues/15",
+        () {
       expect(
-        diffutil.calculateListDiff([1, 0, 2, 0, 3], [1, 0, 3], detectMoves: false).getUpdatesWithData().toList(),
+        diffutil
+            .calculateListDiff([1, 0, 2, 0, 3], [1, 0, 3], detectMoves: false)
+            .getUpdatesWithData()
+            .toList(),
         const [
           DataRemove(position: 2, data: 2),
           DataRemove(position: 1, data: 0),
         ],
       );
     });
-
   });
-
-
 }
 
 class _DumbDiffDelegate implements diffutil.DiffDelegate {

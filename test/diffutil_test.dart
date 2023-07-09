@@ -3,9 +3,6 @@ import 'package:diffutil_dart/src/model/diffupdate.dart';
 import 'package:test/test.dart';
 
 void main() {
-
-
-
   group('basis behaviour: ', () {
     test('same list should have no diff', () {
       final updates =
@@ -35,8 +32,10 @@ void main() {
       final updates =
           diffutil.calculateListDiff([1, 2, 3], [1, 0, 3]).getUpdates();
 
-      expect(updates,
-          [const Remove(position: 1, count: 1), const Insert(position: 1, count: 1)]);
+      expect(updates, [
+        const Remove(position: 1, count: 1),
+        const Insert(position: 1, count: 1)
+      ]);
     });
 
     test(
@@ -45,8 +44,10 @@ void main() {
       final updates =
           diffutil.calculateListDiff([1, 2, 3], [1, 3, 4, 5]).getUpdates();
 
-      expect(updates,
-          [const Insert(position: 3, count: 2), const Remove(position: 1, count: 1)]);
+      expect(updates, [
+        const Insert(position: 3, count: 2),
+        const Remove(position: 1, count: 1)
+      ]);
     });
   });
 
@@ -155,10 +156,8 @@ void main() {
 
       expect(updates, [
         const Remove(position: 3, count: 1),
-
         const Move(from: 1, to: 2),
         const Remove(position: 0, count: 1),
-
       ]);
     });
   });
@@ -192,8 +191,6 @@ void main() {
             detectMoves: true)
         .getUpdates();
 
-
-
     expect(updates, const [
       Insert(position: 2, count: 1),
       Change(position: 1, payload: null),
@@ -220,7 +217,6 @@ void main() {
       const Insert(position: 2, count: 1),
       const Change(position: 0, payload: null),
       const Change(position: 1, payload: null),
-
     ]);
   });
 
@@ -322,21 +318,21 @@ void main() {
     });
   });
 
-
   group("regression tests", () {
-
-
-    test("github issue #15 https://github.com/knaeckeKami/diffutil.dart/issues/15", (){
-
+    test(
+        "github issue #15 https://github.com/knaeckeKami/diffutil.dart/issues/15",
+        () {
       expect(
-        diffutil.calculateListDiff([1, 0, 2, 0, 3], [1, 0, 3], detectMoves: false).getUpdates(batch: false).toList(),
+        diffutil
+            .calculateListDiff([1, 0, 2, 0, 3], [1, 0, 3], detectMoves: false)
+            .getUpdates(batch: false)
+            .toList(),
         const [
           Remove(position: 2, count: 1),
           Remove(position: 1, count: 1),
         ],
       );
     });
-
   });
 }
 
