@@ -1,3 +1,5 @@
+// ignore_for_file: constant_identifier_names
+
 import 'dart:math';
 import 'dart:typed_data';
 
@@ -5,60 +7,143 @@ import 'package:diffutil_dart/src/diff_delegate.dart';
 import 'package:diffutil_dart/src/model/diffupdate.dart';
 import 'package:diffutil_dart/src/model/diffupdate_with_data.dart';
 
-///
+
 ///Snakes represent a match between two lists. It is optionally prefixed or postfixed with an
 ///add or remove operation. See the Myers' paper for details.
 ///
-class _Snake {
-  ///
-  ///Position in the old list
-  ///
-  int x;
+final class _Snake {
+  /// Position in the old list
+  int startX;
 
-  ///
-  ///Position in the new list
-  ///
-  int y;
+  /// Position in the new list
+   int startY;
 
-  ///
-  ///Number of matches. Might be 0.
-  ///
-  int size;
+  /// End position in the old list, exclusive
+   int endX;
 
-  ///
-  ///If true, this is a removal from the original list followed by {@code size} matches.
-  ///If false, this is an addition from the new list followed by {@code size} matches.
-  ///
-  bool removal;
+  /// End position in the new list, exclusive
+   int endY;
 
-  ///
-  ///If true, the addition or removal is at the end of the snake.
-  ///If false, the addition or removal is at the beginning of the snake.
-  ///
+
   bool reverse;
 
   _Snake(
-      {required this.x,
-      required this.y,
-      required this.size,
-      required this.removal,
+      {required this.startX,
+      required this.startY,
+      required this.endX,
+      required this.endY,
       required this.reverse});
+
+  bool hasAdditionOrRemoval() {
+    return endY - startY != endX - startX;
+  }
+
+  bool isAddition() {
+    return endY - startY > endX - startX;
+  }
+
+  int diagonalSize() {
+    return min(endX - startX, endY - startY);
+  }
+
+  _Diagonal toDiagonal() {
+    if (hasAdditionOrRemoval()) {
+      if (reverse) {
+        // snake edge it at the end
+        return  _Diagonal(startX, startY, diagonalSize());
+      } else {
+        // snake edge it at the beginning
+        if (isAddition()) {
+          return  _Diagonal(startX, startY + 1, diagonalSize());
+        } else {
+          return  _Diagonal(startX + 1, startY, diagonalSize());
+        }
+      }
+    } else {
+      // we are a pure diagonal
+      return _Diagonal(startX, startY, endX - startX);
+    }
+  }
 }
 
-final Comparator<_Snake> _snakeComparator = (o1, o2) {
-  final cmpX = o1.x - o2.x;
-  return cmpX == 0 ? o1.y - o2.y : cmpX;
-};
+///
+/// A diagonal is a match in the graph.
+/// Rather than snakes, we only record the diagonals in the path.
+///
+final class _Diagonal {
+  final int x;
+  final int y;
+  final int size;
 
-class _Range {
-  int? oldListStart;
-  int? oldListEnd;
-  int? newListStart;
-  int? newListEnd;
+  _Diagonal(this.x, this.y, this.size);
+
+  @pragma("vm:prefer-inline")
+  int endX() {
+    return x + size;
+  }
+
+  @pragma("vm:prefer-inline")
+  int endY() {
+    return y + size;
+  }
+}
+
+@pragma("vm:prefer-inline")
+int _diagonalComparator (_Diagonal o1, _Diagonal o2) {
+  return o1.x - o2.x;
+}
+
+final class _Range {
+  int oldListStart;
+  int oldListEnd;
+  int newListStart;
+  int newListEnd;
 
   _Range(
-      {this.oldListStart, this.oldListEnd, this.newListStart, this.newListEnd});
+      {required this.oldListStart,
+      required this.oldListEnd,
+      required this.newListStart,
+      required this.newListEnd});
+
+  _Range.empty()
+      : oldListStart = 0,
+        oldListEnd = 0,
+        newListStart = 0,
+        newListEnd = 0;
+
+  int oldSize() {
+    return oldListEnd - oldListStart;
+  }
+
+  int newSize() {
+    return newListEnd - newListStart;
+  }
 }
+
+final class _CenteredArray {
+  final Int32List data;
+  final int _mid;
+
+  _CenteredArray(int size)
+      : _mid = size ~/ 2,
+        data = Int32List(size);
+
+  @pragma("vm:prefer-inline")
+  int operator [](int index) {
+    return data[_mid + index];
+  }
+
+  @pragma("vm:prefer-inline")
+  void operator []=(int index, int value) {
+    data[_mid + index] = value;
+  }
+
+  void fill(int value) {
+    data.fillRange(0, data.length, value);
+  }
+}
+
+
 
 ///
 ///This class holds the information about the result of a
@@ -90,22 +175,17 @@ class DiffResult<T> {
   // Item has moved but did not change.
   static const int FLAG_MOVED_NOT_CHANGED = FLAG_MOVED_CHANGED << 1;
 
-  // Ignore this update.
-  // If this is an addition from the new list, it means the item is actually removed from an
-  // earlier position and its move will be dispatched when we process the matching removal
-  // from the old list.
-  // If this is a removal from the old list, it means the item is actually added back to an
-  // earlier index in the new list and we'll dispatch its move when we are processing that
-  // addition.
-  static const int FLAG_IGNORE = FLAG_MOVED_NOT_CHANGED << 1;
+  // Item move
+  static const int FLAG_MOVED = FLAG_MOVED_CHANGED | FLAG_MOVED_NOT_CHANGED;
+
 
   // since we are re-using the int arrays that were created in the Myers' step, we mask
   // change flags
-  static const int FLAG_OFFSET = 5;
+  static const int FLAG_OFFSET = 4;
   static const int FLAG_MASK = (1 << FLAG_OFFSET) - 1;
 
   // The Myers' snakes. At this point, we only care about their diagonal sections.
-  final List<_Snake> _mSnakes;
+  final List<_Diagonal> _mDiagonals;
 
   // The list to keep oldItemStatuses. As we traverse old items, we assign flags to them
   // which also includes whether they were a real removal or a move (and its new index).
@@ -128,9 +208,9 @@ class DiffResult<T> {
   ///@param newItemStatuses An int[] that can be re-purposed to keep metadata
   ///@param detectMoves True if this DiffResult will try to detect moved items
   ///
-  DiffResult._(DiffDelegate callback, List<_Snake> snakes,
-      List<int> oldItemStatuses, List<int> newItemStatuses, bool detectMoves)
-      : _mSnakes = snakes,
+  DiffResult._(DiffDelegate callback, List<_Diagonal> diagonals, List<int> oldItemStatuses,
+      List<int> newItemStatuses, bool detectMoves)
+      : _mDiagonals = diagonals,
         _mOldItemStatuses = oldItemStatuses,
         _mNewItemStatuses = newItemStatuses,
         _mCallback = callback,
@@ -143,175 +223,194 @@ class DiffResult<T> {
     if (_mNewItemStatuses.isNotEmpty) {
       _mNewItemStatuses.fillRange(0, _mNewItemStatuses.length - 1, 0);
     }
-    _addRootSnake();
+    _addEdgeDiagonals();
     _findMatchingItems();
   }
 
-  ///
-  ///We always add a Snake to 0/0 so that we can run loops from end to beginning and be done
-  ///when we run out of snakes.
-  ///
-  void _addRootSnake() {
-    final firstSnake = _mSnakes.isEmpty ? null : _mSnakes.first;
-    if (firstSnake == null || firstSnake.x != 0 || firstSnake.y != 0) {
-      final root = _Snake(x: 0, y: 0, removal: false, size: 0, reverse: false);
-      _mSnakes.insert(0, root);
+  /// Add edge diagonals so that we can iterate as long as there are diagonals w/o lots of
+  /// null checks around
+  void _addEdgeDiagonals() {
+    final first = _mDiagonals.isEmpty ? null : _mDiagonals[0];
+    // see if we should add 1 to the 0,0
+    if (first == null || first.x != 0 || first.y != 0) {
+      _mDiagonals.insert(0, _Diagonal(0, 0, 0));
     }
+    // always add one last
+    _mDiagonals.add(_Diagonal(_mOldListSize, _mNewListSize, 0));
   }
 
-  ///
-  ///This method traverses each addition / removal and tries to match it to a previous
-  ///removal / addition. This is how we detect move operations.
-  ///<p>
-  ///This class also flags whether an item has been changed or not.
-  ///<p>
-  ///DiffUtil does this pre-processing so that if it is running on a big list, it can be moved
-  ///to background thread where most of the expensive stuff will be calculated and kept in
-  ///the statuses maps. DiffResult uses this pre-calculated information while dispatching
-  ///the updates (which is probably being called on the main thread).
-  ///
+  /// Find position mapping from old list to new list.
+  /// If moves are requested, we'll also try to do an n^2 search between additions and
+  /// removals to find moves.
   void _findMatchingItems() {
-    int posOld = _mOldListSize;
-    int posNew = _mNewListSize;
-    // traverse the matrix from right bottom to 0,0.
-    for (var i = _mSnakes.length - 1; i >= 0; i--) {
-      final snake = _mSnakes[i];
-      final endX = snake.x + snake.size;
-      final endY = snake.y + snake.size;
-      if (_mDetectMoves) {
-        while (posOld > endX) {
-          // this is a removal. Check remaining snakes to see if this was added before
-          _findAddition(posOld, posNew, i);
-          posOld--;
-        }
-        while (posNew > endY) {
-          // this is an addition. Check remaining snakes to see if this was removed
-          // before
-          _findRemoval(posOld, posNew, i);
-          posNew--;
-        }
+    for (_Diagonal diagonal in _mDiagonals) {
+      for (int offset = 0; offset < diagonal.size; offset++) {
+        final int posX = diagonal.x + offset;
+        final int posY = diagonal.y + offset;
+        final bool theSame = _mCallback.areContentsTheSame(posX, posY);
+        final int changeFlag = theSame ? FLAG_NOT_CHANGED : FLAG_CHANGED;
+        _mOldItemStatuses[posX] = (posY << FLAG_OFFSET) | changeFlag;
+        _mNewItemStatuses[posY] = (posX << FLAG_OFFSET) | changeFlag;
       }
-      for (var j = 0; j < snake.size; j++) {
-        // matching items. Check if it is changed or not
-        final oldItemPos = snake.x + j;
-        final newItemPos = snake.y + j;
-        final isSame = _mCallback.areContentsTheSame(oldItemPos, newItemPos);
-        final changeFlag = isSame ? FLAG_NOT_CHANGED : FLAG_CHANGED;
-        _mOldItemStatuses[oldItemPos] =
-            (newItemPos << FLAG_OFFSET) | changeFlag;
-        _mNewItemStatuses[newItemPos] =
-            (oldItemPos << FLAG_OFFSET) | changeFlag;
+    }
+    // now all matches are marked, lets look for moves
+    if (_mDetectMoves) {
+      // traverse each addition / removal from the end of the list, find matching
+      // addition removal from before
+      _findMoveMatches();
+    }
+  }
+
+  void _findMoveMatches() {
+    // for each removal, find matching addition
+    int posX = 0;
+    for (_Diagonal diagonal in _mDiagonals) {
+      while (posX < diagonal.x) {
+        if (_mOldItemStatuses[posX] == 0) {
+          // there is a removal, find matching addition from the rest
+          _findMatchingAddition(posX);
+        }
+        posX++;
       }
-      posOld = snake.x;
-      posNew = snake.y;
+      // snap back for the next diagonal
+      posX = diagonal.endX();
     }
   }
 
-  void _findAddition(int x, int y, int snakeIndex) {
-    if (_mOldItemStatuses[x - 1] != 0) {
-      return; // already set by a latter item
-    }
-    _findMatchingItem(x, y, snakeIndex, false);
-  }
-
-  void _findRemoval(int x, int y, int snakeIndex) {
-    if (_mNewItemStatuses[y - 1] != 0) {
-      return; // already set by a latter item
-    }
-    _findMatchingItem(x, y, snakeIndex, true);
-  }
-
+  /// Search the whole list to find the addition for the given removal of position posX
   ///
-  ///Finds a matching item that is before the given coordinates in the matrix
-  ///(before : left and above).*
-
-  ///@param x The x position in the matrix (position in the old list)
-  ///@param y The y position in the matrix (position in the new list)
-  ///@param snakeIndex The current snake index
-  ///@param removal True if we are looking for a removal, false otherwise
-  ///
-
-  ///@return True if such item is found.
-  ///
-  bool _findMatchingItem(
-      final int x, final int y, final int snakeIndex, final bool removal) {
-    int myItemPos;
-    int curX;
-    int curY;
-    if (removal) {
-      myItemPos = y - 1;
-      curX = x;
-      curY = y - 1;
-    } else {
-      myItemPos = x - 1;
-      curX = x - 1;
-      curY = y;
-    }
-    for (var i = snakeIndex; i >= 0; i--) {
-      final snake = _mSnakes[i];
-      final endX = snake.x + snake.size;
-      final endY = snake.y + snake.size;
-      if (removal) {
-        // check removals for a match
-        for (var pos = curX - 1; pos >= endX; pos--) {
-          if (_mCallback.areItemsTheSame(pos, myItemPos)) {
-            // found!
-            final isSame = _mCallback.areContentsTheSame(pos, myItemPos);
-            final changeFlag =
-                isSame ? FLAG_MOVED_NOT_CHANGED : FLAG_MOVED_CHANGED;
-            _mNewItemStatuses[myItemPos] = (pos << FLAG_OFFSET) | FLAG_IGNORE;
-            _mOldItemStatuses[pos] = (myItemPos << FLAG_OFFSET) | changeFlag;
-            return true;
+  /// @param posX position in the old list
+  void _findMatchingAddition(int posX) {
+    int posY = 0;
+    final int diagonalsSize = _mDiagonals.length;
+    for (int i = 0; i < diagonalsSize; i++) {
+      final _Diagonal diagonal = _mDiagonals[i];
+      while (posY < diagonal.y) {
+        // found some additions, evaluate
+        if (_mNewItemStatuses[posY] == 0) { // not evaluated yet
+          final matching = _mCallback.areItemsTheSame(posX, posY);
+          if (matching) {
+            // yay found it, set values
+            final contentsMatching = _mCallback.areContentsTheSame(posX, posY);
+            final int changeFlag = contentsMatching ? FLAG_MOVED_NOT_CHANGED
+                : FLAG_MOVED_CHANGED;
+            // once we process one of these, it will mark the other one as ignored.
+            _mOldItemStatuses[posX] = (posY << FLAG_OFFSET) | changeFlag;
+            _mNewItemStatuses[posY] = (posX << FLAG_OFFSET) | changeFlag;
+            return;
           }
         }
-      } else {
-        // check for additions for a match
-        for (var pos = curY - 1; pos >= endY; pos--) {
-          if (_mCallback.areItemsTheSame(myItemPos, pos)) {
-            // found
-            final isSame = _mCallback.areContentsTheSame(myItemPos, pos);
-            final changeFlag =
-                isSame ? FLAG_MOVED_NOT_CHANGED : FLAG_MOVED_CHANGED;
-            _mOldItemStatuses[x - 1] = (pos << FLAG_OFFSET) | FLAG_IGNORE;
-            _mNewItemStatuses[pos] = ((x - 1) << FLAG_OFFSET) | changeFlag;
-            return true;
-          }
-        }
+        posY++;
       }
-      curX = snake.x;
-      curY = snake.y;
+      posY = diagonal.endY();
     }
-    return false;
   }
+
 
   Iterable<DiffUpdate> getUpdates({bool batch = true}) {
     final updates = <DiffUpdate>[];
-    // These are add/remove ops that are converted to moves. We track their positions until
-    // their respective update operations are processed.
+    // track up to date current list size for moves
+    // when a move is found, we record its position from the end of the list (which is
+    // less likely to change since we iterate in reverse).
+    // Later when we find the match of that move, we dispatch the update
+    int currentListSize = _mOldListSize;
+    // list of postponed moves
     final postponedUpdates = <_PostponedUpdate>[];
-    int posOld = _mOldListSize;
-    int posNew = _mNewListSize;
-    for (var snakeIndex = _mSnakes.length - 1; snakeIndex >= 0; snakeIndex--) {
-      final snake = _mSnakes[snakeIndex];
-      final snakeSize = snake.size;
-      final endX = snake.x + snakeSize;
-      final endY = snake.y + snakeSize;
-      if (endX < posOld) {
-        _dispatchRemovals(postponedUpdates, updates, endX, posOld - endX, endX);
-      }
-      if (endY < posNew) {
-        _dispatchAdditions(
-            postponedUpdates, updates, endX, posNew - endY, endY);
-      }
-      for (var i = snakeSize - 1; i >= 0; i--) {
-        if ((_mOldItemStatuses[snake.x + i] & FLAG_MASK) == FLAG_CHANGED) {
-          updates.add(DiffUpdate.change(
-              position: snake.x + i,
-              payload: _mCallback.getChangePayload(snake.x + i, snake.y + i)));
+    // posX and posY are exclusive
+    int posX = _mOldListSize;
+    int posY = _mNewListSize;
+    // iterate from end of the list to the beginning.
+    // this just makes offsets easier since changes in the earlier indices has an effect
+    // on the later indices.
+    for (int diagonalIndex = _mDiagonals.length - 1; diagonalIndex >= 0; diagonalIndex--) {
+      final _Diagonal diagonal = _mDiagonals[(diagonalIndex)];
+      final int endX = diagonal.endX();
+      final int endY = diagonal.endY();
+      // dispatch removals and additions until we reach to that diagonal
+      // first remove then add so that it can go into its place and we don't need
+      // to offset values
+      while (posX > endX) {
+        posX--;
+        // REMOVAL
+        final int status = _mOldItemStatuses[posX];
+        if ((status & FLAG_MOVED) != 0) {
+          final int newPos = status >> FLAG_OFFSET;
+          // get postponed addition
+          final _PostponedUpdate? postponedUpdate = getPostponedUpdate(postponedUpdates,
+              newPos, false);
+          if (postponedUpdate != null) {
+            // this is an addition that was postponed. Now dispatch it.
+            final int updatedNewPos = currentListSize - postponedUpdate.currentPos;
+            updates.add(Move(from: posX, to: updatedNewPos -1));
+            if ((status & FLAG_MOVED_CHANGED) != 0) {
+              final Object? changePayload = _mCallback.getChangePayload(posX, newPos);
+              updates.add(Change(position: updatedNewPos - 1, payload: changePayload));
+            }
+          } else {
+            // first time we are seeing this, we'll see a matching addition
+            postponedUpdates.add(_PostponedUpdate(
+                posInOwnerList: posX,
+                currentPos: currentListSize - posX - 1,
+                removal: true
+            ));
+          }
+        } else {
+          // simple removal
+          updates.add(Remove(position: posX, count: 1));
+          currentListSize--;
         }
       }
-      posOld = snake.x;
-      posNew = snake.y;
+      while (posY > endY) {
+        posY--;
+        // ADDITION
+        final int status = _mNewItemStatuses[posY];
+        if ((status & FLAG_MOVED) != 0) {
+          // this is a move not an addition.
+          // see if this is postponed
+          final int oldPos = status >> FLAG_OFFSET;
+          // get postponed removal
+          final _PostponedUpdate? postponedUpdate = getPostponedUpdate(postponedUpdates,
+              oldPos, true);
+          // empty size returns 0 for indexOf
+          if (postponedUpdate == null) {
+            // postpone it until we see the removal
+            postponedUpdates.add(_PostponedUpdate(
+                posInOwnerList: posY,
+               currentPos: currentListSize - posX,
+                removal: false
+            ));
+          } else {
+            // oldPosFromEnd = foundListSize - posX
+            // we can find posX if we swap the list sizes
+            // posX = listSize - oldPosFromEnd
+            final int updatedOldPos = currentListSize - postponedUpdate.currentPos - 1;
+            updates.add(Move(from: updatedOldPos, to: posX));
+            if ((status & FLAG_MOVED_CHANGED) != 0) {
+              final Object? changePayload = _mCallback.getChangePayload(oldPos, posY);
+              updates.add(Change(position: posX, payload: changePayload));
+            }
+          }
+        } else {
+          // simple addition
+          updates.add(Insert(position: posX, count: 1));
+          currentListSize++;
+        }
+      }
+      // now dispatch updates for the diagonal
+      posX = diagonal.x;
+      posY = diagonal.y;
+      for (int i = 0; i < diagonal.size; i++) {
+        // dispatch changes
+        if ((_mOldItemStatuses[posX] & FLAG_MASK) == FLAG_CHANGED) {
+          final Object? changePayload = _mCallback.getChangePayload(posX, posY);
+          updates.add(Change(position: posX, payload: changePayload));
+        }
+        posX++;
+        posY++;
+      }
+      // snap back for the next diagonal
+      posX = diagonal.x;
+      posY = diagonal.y;
     }
     return batch ? updates.batch() : updates;
   }
@@ -323,248 +422,149 @@ class DiffResult<T> {
           "$delegate is not a IndexableItemDiffDelegate<$T>. call getUpdates() instead or implement IndexableItemDiffDelegate in your DiffDelegate ");
     }
     final updates = <DataDiffUpdate<T>>[];
-    // These are add/remove ops that are converted to moves. We track their positions until
-    // their respective update operations are processed.
+    // track up to date current list size for moves
+    // when a move is found, we record its position from the end of the list (which is
+    // less likely to change since we iterate in reverse).
+    // Later when we find the match of that move, we dispatch the update
+    int currentListSize = _mOldListSize;
+    // list of postponed moves
     final postponedUpdates = <_PostponedUpdate>[];
-    int posOld = _mOldListSize;
-    int posNew = _mNewListSize;
-    for (var snakeIndex = _mSnakes.length - 1; snakeIndex >= 0; snakeIndex--) {
-      final snake = _mSnakes[snakeIndex];
-      final snakeSize = snake.size;
-      final endX = snake.x + snakeSize;
-      final endY = snake.y + snakeSize;
-      if (endX < posOld) {
-        _dispatchRemovalsWithData(postponedUpdates, updates, delegate, endX,
-            posOld - endX, endX, snake);
-      }
-      if (endY < posNew) {
-        _dispatchAdditionsWithData(postponedUpdates, updates, delegate, endX,
-            posNew - endY, endY, snake);
-      }
-      for (var i = snakeSize - 1; i >= 0; i--) {
-        if ((_mOldItemStatuses[snake.x + i] & FLAG_MASK) == FLAG_CHANGED) {
-          updates.add(DataDiffUpdate.change(
-              position: snake.x + i,
-              oldData: delegate.getOldItemAtIndex(snake.x + i),
-              newData: delegate.getNewItemAtIndex(snake.y + i)));
+    // posX and posY are exclusive
+    int posX = _mOldListSize;
+    int posY = _mNewListSize;
+    // iterate from end of the list to the beginning.
+    // this just makes offsets easier since changes in the earlier indices has an effect
+    // on the later indices.
+    for (int diagonalIndex = _mDiagonals.length - 1; diagonalIndex >= 0; diagonalIndex--) {
+      final _Diagonal diagonal = _mDiagonals[(diagonalIndex)];
+
+
+      final int endX = diagonal.endX();
+      final int endY = diagonal.endY();
+      // dispatch removals and additions until we reach to that diagonal
+      // first remove then add so that it can go into its place and we don't need
+      // to offset values
+      while (posX > endX) {
+        posX--;
+        // REMOVAL
+        final int status = _mOldItemStatuses[posX];
+        final item = delegate.getOldItemAtIndex(posX);
+        if ((status & FLAG_MOVED) != 0) {
+          final int newPos = status >> FLAG_OFFSET;
+          // get postponed addition
+          final _PostponedUpdate? postponedUpdate = getPostponedUpdate(postponedUpdates,
+              newPos, false);
+          if (postponedUpdate != null) {
+            // this is an addition that was postponed. Now dispatch it.
+            final int updatedNewPos = currentListSize - postponedUpdate.currentPos;
+            updates.add(DataMove(from: posX, to: updatedNewPos -1, data: item));
+            if ((status & FLAG_MOVED_CHANGED) != 0) {
+              updates.add(DataChange(position: updatedNewPos - 1,
+               newData: delegate.getNewItemAtIndex(newPos),
+                oldData: item,
+              ));
+            }
+          } else {
+            // first time we are seeing this, we'll see a matching addition
+            postponedUpdates.add(_PostponedUpdate(
+                posInOwnerList: posX,
+                currentPos: currentListSize - posX - 1,
+                removal: true
+            ));
+          }
+        } else {
+          // simple removal
+          updates.add(DataRemove(position: posX, data: item));
+          currentListSize--;
         }
       }
-      posOld = snake.x;
-      posNew = snake.y;
+      while (posY > endY) {
+        posY--;
+        // ADDITION
+        final int status = _mNewItemStatuses[posY];
+        final item = delegate.getNewItemAtIndex(posY);
+
+        if ((status & FLAG_MOVED) != 0) {
+          // this is a move not an addition.
+          // see if this is postponed
+          final int oldPos = status >> FLAG_OFFSET;
+          // get postponed removal
+          final _PostponedUpdate? postponedUpdate = getPostponedUpdate(postponedUpdates,
+              oldPos, true);
+          // empty size returns 0 for indexOf
+          if (postponedUpdate == null) {
+            // postpone it until we see the removal
+            postponedUpdates.add(_PostponedUpdate(
+                posInOwnerList: posY,
+                currentPos: currentListSize - posX,
+                removal: false
+            ));
+          } else {
+            // oldPosFromEnd = foundListSize - posX
+            // we can find posX if we swap the list sizes
+            // posX = listSize - oldPosFromEnd
+            final int updatedOldPos = currentListSize - postponedUpdate.currentPos - 1;
+            updates.add(DataMove(from: updatedOldPos, to: posX, data: item));
+            if ((status & FLAG_MOVED_CHANGED) != 0) {
+              updates.add(DataDiffUpdate.change(
+                  position: posX, oldData: delegate.getOldItemAtIndex(oldPos), newData: item));
+            }
+          }
+        } else {
+          // simple addition
+          updates.add(DataInsert(position: posX, data: item));
+          currentListSize++;
+        }
+      }
+      // now dispatch updates for the diagonal
+      posX = diagonal.x;
+      posY = diagonal.y;
+      for (int i = 0; i < diagonal.size; i++) {
+        // dispatch changes
+        if ((_mOldItemStatuses[posX] & FLAG_MASK) == FLAG_CHANGED) {
+          updates.add(DataDiffUpdate.change(
+              position: posX, oldData: delegate.getOldItemAtIndex(posX), newData:
+              delegate.getNewItemAtIndex(posY)));
+          //updates.add(Change(position: posX, payload: changePayload));
+        }
+        posX++;
+        posY++;
+      }
+      // snap back for the next diagonal
+      posX = diagonal.x;
+      posY = diagonal.y;
     }
     return updates;
   }
 
-  static _PostponedUpdate? _removePostponedUpdate(
-      List<_PostponedUpdate> updates, int pos, bool removal) {
-    for (var i = updates.length - 1; i >= 0; i--) {
-      final update = updates[i];
-      if (update.posInOwnerList == pos && update.removal == removal) {
-        updates.removeAt(i);
-        for (var j = i; j < updates.length; j++) {
-          // offset other ops since they swapped positions
-          updates[j].currentPos += removal ? 1 : -1;
-        }
-        return update;
-      }
-    }
-    return null;
-  }
 
-  void _dispatchRemovals(List<_PostponedUpdate> postponedUpdates,
-      List<DiffUpdate> updates, int start, int count, int globalIndex) {
-    if (!_mDetectMoves) {
-      updates.add(DiffUpdate.remove(position: start, count: count));
-      return;
-    }
-    for (var i = count - 1; i >= 0; i--) {
-      final status = _mOldItemStatuses[globalIndex + i] & FLAG_MASK;
-      switch (status) {
-        case 0: // real removal
-          updates.add(DiffUpdate.remove(position: start + i, count: 1));
-          for (final update in postponedUpdates) {
-            update.currentPos -= 1;
-          }
-          break;
-        case FLAG_MOVED_CHANGED:
-        case FLAG_MOVED_NOT_CHANGED:
-          final pos = _mOldItemStatuses[globalIndex + i] >> FLAG_OFFSET;
-          final update = _removePostponedUpdate(postponedUpdates, pos, false)!;
-          // the item was moved to that position. we do -1 because this is a move not
-          // add and removing current item offsets the target move by 1
-          //noinspection ConstantConditions
-          updates
-              .add(DiffUpdate.move(from: start + i, to: update.currentPos - 1));
-          if (status == FLAG_MOVED_CHANGED) {
-            // also dispatch a change
-            updates.add(DiffUpdate.change(
-                position: update.currentPos - 1,
-                payload: _mCallback.getChangePayload(globalIndex + i, pos)));
-          }
-          break;
-        case FLAG_IGNORE: // ignoring this
-          postponedUpdates.add(_PostponedUpdate(
-              posInOwnerList: globalIndex + i,
-              currentPos: start + i,
-              removal: true));
-          break;
-        default:
-          //coverage:ignore-line
-          throw StateError(
-              'unknown flag for pos  ${globalIndex + i}:  $status');
-      }
-    }
-  }
+  _PostponedUpdate? getPostponedUpdate(List<_PostponedUpdate> postponedUpdates,
+      int posInList,
+      bool removal) {
+    _PostponedUpdate? postponedUpdate ;
 
-  void _dispatchRemovalsWithData<T>(
-      List<_PostponedUpdate> postponedUpdates,
-      List<DataDiffUpdate<T>> updates,
-      IndexableItemDiffDelegate<T> delegate,
-      int start,
-      int count,
-      int globalIndex,
-      _Snake snake) {
-    if (!_mDetectMoves) {
-      for (var i = count - 1; i >= 0; i--) {
-        final item = delegate.getOldItemAtIndex(snake.x + snake.size + i);
-        updates.add(DataDiffUpdate.remove(position: start + i, data: item));
-      }
-      return;
-    }
-    for (var i = count - 1; i >= 0; i--) {
-      final status = _mOldItemStatuses[globalIndex + i] & FLAG_MASK;
-      final item = delegate.getOldItemAtIndex(snake.x + snake.size + i);
-      switch (status) {
-        case 0: // real removal
-          updates.add(DataDiffUpdate.remove(position: start + i, data: item));
-          for (final update in postponedUpdates) {
-            update.currentPos -= 1;
-          }
-          break;
-        case FLAG_MOVED_CHANGED:
-        case FLAG_MOVED_NOT_CHANGED:
-          final pos = _mOldItemStatuses[globalIndex + i] >> FLAG_OFFSET;
-          final update = _removePostponedUpdate(postponedUpdates, pos, false)!;
-          // the item was moved to that position. we do -1 because this is a move not
-          // add and removing current item offsets the target move by 1
-          //noinspection ConstantConditions
-          updates.add(DataDiffUpdate.move(
-              from: start + i, to: update.currentPos - 1, data: item));
-          if (status == FLAG_MOVED_CHANGED) {
-            // also dispatch a change
-            updates.add(DataDiffUpdate.change(
-                position: update.currentPos - 1,
-                oldData: item,
-                newData: delegate.getNewItemAtIndex(pos)));
-          }
-          break;
-        case FLAG_IGNORE: // ignoring this
-          postponedUpdates.add(_PostponedUpdate(
-              posInOwnerList: globalIndex + i,
-              currentPos: start + i,
-              removal: true));
-          break;
-        default:
-          //coverage:ignore-line
-          throw StateError(
-              'unknown flag for pos  ${globalIndex + i}:  $status');
-      }
-    }
-  }
+    int i = 0;
 
-  void _dispatchAdditions(List<_PostponedUpdate> postponedUpdates,
-      List<DiffUpdate> updates, int start, int count, int globalIndex) {
-    if (!_mDetectMoves) {
-      updates.add(DiffUpdate.insert(position: start, count: count));
-      return;
-    }
-    for (var i = count - 1; i >= 0; i--) {
-      final status = _mNewItemStatuses[globalIndex + i] & FLAG_MASK;
-      switch (status) {
-        case 0: // real addition
-          updates.add(DiffUpdate.insert(position: start, count: 1));
-          for (final update in postponedUpdates) {
-            update.currentPos += 1;
-          }
-          break;
-        case FLAG_MOVED_CHANGED:
-        case FLAG_MOVED_NOT_CHANGED:
-          final pos = _mNewItemStatuses[globalIndex + i] >> FLAG_OFFSET;
-          final update = _removePostponedUpdate(postponedUpdates, pos, true)!;
-          // the item was moved from that position
-          updates.add(DiffUpdate.move(from: update.currentPos, to: start));
-          if (status == FLAG_MOVED_CHANGED) {
-            // also dispatch a change
-            updates.add(DiffUpdate.change(
-                position: start,
-                payload: _mCallback.getChangePayload(pos, globalIndex + i)));
-          }
-          break;
-        case FLAG_IGNORE: // ignoring this
-          postponedUpdates.add(_PostponedUpdate(
-              posInOwnerList: globalIndex + i,
-              currentPos: start,
-              removal: false));
-          break;
-        default:
-          //coverage:ignore-line
-          throw StateError('unknown flag for pos ${globalIndex + i}:  $status');
-      }
-    }
-  }
 
-  void _dispatchAdditionsWithData(
-    List<_PostponedUpdate> postponedUpdates,
-    List<DataDiffUpdate<T>> updates,
-    IndexableItemDiffDelegate<T> delegate,
-    int start,
-    int count,
-    int globalIndex,
-    _Snake snake,
-  ) {
-    if (!_mDetectMoves) {
-      for (var i = count - 1; i >= 0; i--) {
-        final item = delegate.getNewItemAtIndex(snake.y + snake.size + i);
-        updates.add(DataDiffUpdate.insert(position: start, data: item));
+    while (i < postponedUpdates.length) {
+      final update = postponedUpdates.elementAt(i);
+      if (update.posInOwnerList == posInList && update.removal == removal) {
+        postponedUpdate = update;
+        postponedUpdates.removeAt(i);
+        break;
       }
-      return;
+      i++;
     }
-    for (var i = count - 1; i >= 0; i--) {
-      final status = _mNewItemStatuses[globalIndex + i] & FLAG_MASK;
-      final item = delegate.getNewItemAtIndex(snake.y + snake.size + i);
-      switch (status) {
-        case 0: // real addition
-          updates.add(DataDiffUpdate.insert(position: start, data: item));
-          for (final update in postponedUpdates) {
-            update.currentPos += 1;
-          }
-          break;
-        case FLAG_MOVED_CHANGED:
-        case FLAG_MOVED_NOT_CHANGED:
-          final pos = _mNewItemStatuses[globalIndex + i] >> FLAG_OFFSET;
-          final update = _removePostponedUpdate(postponedUpdates, pos, true)!;
-          // the item was moved from that position
-          updates.add(DataDiffUpdate.move(
-              from: update.currentPos, to: start, data: item));
-          if (status == FLAG_MOVED_CHANGED) {
-            // also dispatch a change
-            updates.add(DataDiffUpdate.change(
-                position: start,
-                oldData: delegate.getOldItemAtIndex(pos),
-                newData: item));
-          }
-          break;
-        case FLAG_IGNORE: // ignoring this
-          postponedUpdates.add(_PostponedUpdate(
-              posInOwnerList: globalIndex + i,
-              currentPos: start,
-              removal: false));
-          break;
-        default:
-          //coverage:ignore-line
-          throw StateError('unknown flag for pos ${globalIndex + i}:  $status');
+    while (i < postponedUpdates.length) {
+      // re-offset all others
+      final update = postponedUpdates.elementAt(i);
+      if (removal) {
+        update.currentPos--;
+      } else {
+        update.currentPos++;
       }
     }
+    return postponedUpdate;
   }
 }
 
@@ -573,10 +573,7 @@ class _PostponedUpdate {
   int currentPos;
   final bool removal;
 
-  _PostponedUpdate(
-      {required this.posInOwnerList,
-      required this.currentPos,
-      required this.removal});
+  _PostponedUpdate({required this.posInOwnerList, required this.currentPos, required this.removal});
 }
 
 ///
@@ -595,172 +592,58 @@ class _PostponedUpdate {
 DiffResult<T> calculateDiff<T>(DiffDelegate cb, {bool detectMoves = false}) {
   final oldSize = cb.getOldListSize();
   final newSize = cb.getNewListSize();
-  final snakes = <_Snake>[];
+  final diagonals = <_Diagonal>[];
   // instead of a recursive implementation, we keep our own stack to avoid potential stack
   // overflow exceptions
   final stack = <_Range>[];
-  stack.add(_Range(
-      oldListStart: 0,
-      oldListEnd: oldSize,
-      newListStart: 0,
-      newListEnd: newSize));
-  final max = oldSize + newSize + (oldSize - newSize).abs();
+  stack.add(_Range(oldListStart: 0, oldListEnd: oldSize, newListStart: 0, newListEnd: newSize));
+  final max = (oldSize + newSize + 1) ~/ 2;
   // allocate forward and backward k-lines. K lines are diagonal lines in the matrix. (see the
   // paper for details)
   // These arrays lines keep the max reachable position for each k-line.
-  final forward = Int32List(max * 2);
-  final backward = Int32List(max * 2);
+  final  forward =  _CenteredArray(max * 2 + 1);
+  final  backward =  _CenteredArray(max * 2 + 1);
   // We pool the ranges to avoid allocations for each recursive call.
   final rangePool = <_Range>[];
   while (stack.isNotEmpty) {
     final range = stack.removeLast();
-    final snake = _diffPartial(cb, range.oldListStart!, range.oldListEnd!,
-        range.newListStart!, range.newListEnd!, forward, backward, max);
+    final snake = midPoint(range, cb, forward, backward);
+
     if (snake != null) {
-      if (snake.size > 0) {
-        snakes.add(snake);
+      // if it has a diagonal, save it
+      if (snake.diagonalSize() > 0) {
+        diagonals.add(snake.toDiagonal());
       }
-      // offset the snake to convert its coordinates from the Range's area to global
-      snake.x += range.oldListStart!;
-      snake.y += range.newListStart!;
+
       // add new ranges for left and right
-      final left = rangePool.isEmpty ? _Range() : rangePool.removeLast();
+      final _Range left = rangePool.isEmpty ?  _Range.empty()
+          : rangePool.removeAt(
+          rangePool.length - 1);
       left.oldListStart = range.oldListStart;
       left.newListStart = range.newListStart;
-      if (snake.reverse) {
-        left.oldListEnd = snake.x;
-        left.newListEnd = snake.y;
-      } else {
-        if (snake.removal) {
-          left.oldListEnd = snake.x - 1;
-          left.newListEnd = snake.y;
-        } else {
-          left.oldListEnd = snake.x;
-          left.newListEnd = snake.y - 1;
-        }
-      }
+      left.oldListEnd = snake.startX;
+      left.newListEnd = snake.startY;
+
       stack.add(left);
+
       // re-use range for right
       //noinspection UnnecessaryLocalVariable
-      final right = range;
-      if (snake.reverse) {
-        if (snake.removal) {
-          right.oldListStart = snake.x + snake.size + 1;
-          right.newListStart = snake.y + snake.size;
-        } else {
-          right.oldListStart = snake.x + snake.size;
-          right.newListStart = snake.y + snake.size + 1;
-        }
-      } else {
-        right.oldListStart = snake.x + snake.size;
-        right.newListStart = snake.y + snake.size;
-      }
+      final _Range right = range;
+      right.oldListEnd = range.oldListEnd;
+      right.newListEnd = range.newListEnd;
+      right.oldListStart = snake.endX;
+      right.newListStart = snake.endY;
       stack.add(right);
     } else {
       rangePool.add(range);
     }
-  }
-  // sort snakes
-  snakes.sort(_snakeComparator);
-  return DiffResult._(cb, snakes, forward, backward, detectMoves);
-}
 
-_Snake? _diffPartial(DiffDelegate cb, int startOld, int endOld, int startNew,
-    int endNew, List<int> forward, List<int> backward, int kOffset) {
-  final oldSize = endOld - startOld;
-  final newSize = endNew - startNew;
-  if (endOld - startOld < 1 || endNew - startNew < 1) {
-    return null;
   }
-  final delta = oldSize - newSize;
-  final dLimit = (oldSize + newSize + 1) ~/ 2;
-  forward.fillRange(kOffset - dLimit - 1, kOffset + dLimit + 1, 0);
-  // Arrays.fill(forward, kOffset - dLimit - 1, kOffset + dLimit + 1, 0);
-  backward.fillRange(
-      kOffset - dLimit - 1 + delta, kOffset + dLimit + 1 + delta, oldSize);
-  final checkInFwd = delta % 2 != 0;
-  for (var d = 0; d <= dLimit; d++) {
-    for (var k = -d; k <= d; k += 2) {
-// find forward path
-// we can reach k from k - 1 or k + 1. Check which one is further in the graph
-      int x;
-      bool removal;
-      if (k == -d ||
-          k != d && forward[kOffset + k - 1] < forward[kOffset + k + 1]) {
-        x = forward[kOffset + k + 1];
-        removal = false;
-      } else {
-        x = forward[kOffset + k - 1] + 1;
-        removal = true;
-      }
-// set y based on x
-      var y = x - k;
-// move diagonal as long as items match
-      while (x < oldSize &&
-          y < newSize &&
-          cb.areItemsTheSame(startOld + x, startNew + y)) {
-        x++;
-        y++;
-      }
-      forward[kOffset + k] = x;
-      if (checkInFwd && k >= delta - d + 1 && k <= delta + d - 1) {
-        if (forward[kOffset + k] >= backward[kOffset + k]) {
-          final x = backward[kOffset + k];
-          final outSnake = _Snake(
-            x: x,
-            y: x - k,
-            size: forward[kOffset + k] - backward[kOffset + k],
-            removal: removal,
-            reverse: false,
-          );
-          return outSnake;
-        }
-      }
-    }
-    for (var k = -d; k <= d; k += 2) {
-// find reverse path at k + delta, in reverse
-      final backwardK = k + delta;
-      int x;
-      bool removal;
-      if (backwardK == d + delta ||
-          backwardK != -d + delta &&
-              backward[kOffset + backwardK - 1] <
-                  backward[kOffset + backwardK + 1]) {
-        x = backward[kOffset + backwardK - 1];
-        removal = false;
-      } else {
-        x = backward[kOffset + backwardK + 1] - 1;
-        removal = true;
-      }
-// set y based on x
-      var y = x - backwardK;
-// move diagonal as long as items match
-      while (x > 0 &&
-          y > 0 &&
-          cb.areItemsTheSame(startOld + x - 1, startNew + y - 1)) {
-        x--;
-        y--;
-      }
-      backward[kOffset + backwardK] = x;
-      if (!checkInFwd && k + delta >= -d && k + delta <= d) {
-        if (forward[kOffset + backwardK] >= backward[kOffset + backwardK]) {
-          final x = backward[kOffset + backwardK];
-          final outSnake = _Snake(
-            x: x,
-            y: x - backwardK,
-            size: forward[kOffset + backwardK] - backward[kOffset + backwardK],
-            removal: removal,
-            reverse: true,
-          );
-          return outSnake;
-        }
-      }
-    }
-  }
-  //coverage:ignore-line
-  throw StateError('''DiffUtil hit an unexpected case while trying to calculate
-the optimal path. Please make sure your data is not changing during the
-diff calculation.''');
+  diagonals.sort(_diagonalComparator);
+
+  return  DiffResult._(cb, diagonals,
+      forward.data, backward.data,
+      detectMoves);
 }
 
 /// calculate the difference between the two given lists.
@@ -838,4 +721,150 @@ extension _Batch on Iterable<DiffUpdate> {
     }
     if (lastUpdate != null) yield lastUpdate;
   }
+}
+
+
+
+_Snake? midPoint(
+    _Range range,
+    DiffDelegate cb,
+    _CenteredArray forward,
+    _CenteredArray backward) {
+  if (range.oldSize() < 1 || range.newSize() < 1) {
+    return null;
+  }
+  final max = (range.oldSize() + range.newSize() + 1) ~/ 2;
+  forward[1] = range.oldListStart;
+  backward[1] = range.oldListEnd;
+  for (int d = 0; d < max; d++) {
+    _Snake? snake = forwardSnake(range, cb, forward, backward, d);
+    if (snake != null) {
+      return snake;
+    }
+    snake = backwardSnake(range, cb, forward, backward, d);
+    if (snake != null) {
+      return snake;
+    }
+  }
+  return null;
+}
+
+
+
+_Snake? forwardSnake(
+    _Range range,
+    DiffDelegate cb,
+    _CenteredArray forward,
+    _CenteredArray backward,
+    int d) {
+  final bool checkForSnake = (range.oldSize() - range.newSize()).abs() % 2 == 1;
+  final delta = range.oldSize() - range.newSize();
+  for (int k = -d; k <= d; k += 2) {
+    // we either come from d-1, k-1 OR d-1. k+1
+    // as we move in steps of 2, array always holds both current and previous d values
+    // k = x - y and each array value holds the max X, y = x - k
+    final int startX;
+    final int startY;
+    int x, y;
+    if (k == -d || (k != d && forward[k + 1] > forward[k - 1])) {
+      // picking k + 1, incrementing Y (by simply not incrementing X)
+      x = startX = forward[k + 1];
+    } else {
+      // picking k - 1, incrementing X
+      startX = forward[k - 1];
+      x = startX + 1;
+    }
+    y = range.newListStart + (x - range.oldListStart) - k;
+    startY = (d == 0 || x != startX) ? y : y - 1;
+    // now find snake size
+    while (x < range.oldListEnd
+        && y < range.newListEnd
+        && cb.areItemsTheSame(x, y)) {
+      x++;
+      y++;
+    }
+    // now we have furthest reaching x, record it
+    forward[k] = x;
+    if (checkForSnake) {
+      // see if we did pass over a backwards array
+      // mapping function: delta - k
+      final backwardsK = delta - k;
+      // if backwards K is calculated and it passed me, found match
+      if (backwardsK >= -d + 1
+          && backwardsK <= d - 1
+          && backward[(backwardsK)] <= x) {
+        // match
+        final snake = _Snake(
+        startX: startX,
+        startY: startY,
+        endX : x,
+        endY : y,
+        reverse : false);
+        return snake;
+      }
+    }
+  }
+  return null;
+}
+
+
+_Snake? backwardSnake(
+    _Range range,
+    DiffDelegate cb,
+    _CenteredArray forward,
+    _CenteredArray backward,
+    int d) {
+  final checkForSnake = (range.oldSize() - range.newSize()) % 2 == 0;
+  final delta = range.oldSize() - range.newSize();
+  // same as forward but we go backwards from end of the lists to be beginning
+  // this also means we'll try to optimize for minimizing x instead of maximizing it
+  for (int k = -d; k <= d; k += 2) {
+    // we either come from d-1, k-1 OR d-1, k+1
+    // as we move in steps of 2, array always holds both current and previous d values
+    // k = x - y and each array value holds the MIN X, y = x - k
+    // when x's are equal, we prioritize deletion over insertion
+    final int startX;
+    final int startY;
+    int x, y;
+
+    if (k == -d || (k != d && backward[(k + 1)] < backward[(k - 1)])) {
+      // picking k + 1, decrementing Y (by simply not decrementing X)
+      x = startX = backward[(k + 1)];
+    } else {
+      // picking k - 1, decrementing X
+      startX = backward[(k - 1)];
+      x = startX - 1;
+    }
+    y = range.newListEnd - ((range.oldListEnd - x) - k);
+    startY = (d == 0 || x != startX) ? y : y + 1;
+    // now find snake size
+    while (x > range.oldListStart
+        && y > range.newListStart
+        && cb.areItemsTheSame(x - 1, y - 1)) {
+      x--;
+      y--;
+    }
+    // now we have furthest point, record it (min X)
+    backward[k] = x;
+    if (checkForSnake) {
+      // see if we did pass over a backwards array
+      // mapping function: delta - k
+      final forwardsK = delta - k;
+      // if forwards K is calculated and it passed me, found match
+      if (forwardsK >= -d
+          && forwardsK <= d
+          && forward[(forwardsK)] >= x) {
+        // match
+        final snake = _Snake(
+        // assignment are reverse since we are a reverse snake
+        startX : x,
+        startY : y,
+        endX : startX,
+        endY : startY,
+        reverse : true);
+        return snake;
+      }
+    }
+  }
+  return null;
 }
