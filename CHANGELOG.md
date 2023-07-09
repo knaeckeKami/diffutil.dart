@@ -1,3 +1,8 @@
+## 4.0.0
+
+- Fix bug that caused wrong update list to be returned when the list would contain duplicate items (see https://github.com/knaeckeKami/diffutil.dart/issues/15)
+- BREAKING: add sealed class modifiers to data classes, require Dart 3.0
+
 ## 3.0.0
 
 
