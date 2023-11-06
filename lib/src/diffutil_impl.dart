@@ -554,6 +554,7 @@ class DiffResult<T> {
       if (update.posInOwnerList == posInList && update.removal == removal) {
         postponedUpdate = update;
         postponedUpdates.removeAt(i);
+        i++;
         break;
       }
       i++;
@@ -566,6 +567,7 @@ class DiffResult<T> {
       } else {
         update.currentPos++;
       }
+      i++;
     }
     return postponedUpdate;
   }
