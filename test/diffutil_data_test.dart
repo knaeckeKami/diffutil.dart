@@ -324,6 +324,21 @@ void main() {
         ],
       );
     });
+
+    test("github issue #21: move detection bug", () {
+      final start = [1, 2, 3, 4, 5, 6];
+      final end = [1, 4, 2, 5, 6, 3];
+
+      final updates = diffutil
+          .calculateListDiff(start, end, detectMoves: true)
+          .getUpdatesWithData()
+          .toList();
+
+      expect(updates, const [
+        DataMove(from: 2, to: 5, data: 3),
+        DataMove(from: 1, to: 2, data: 2),
+      ]);
+    });
   });
 }
 

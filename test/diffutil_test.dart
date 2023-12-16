@@ -242,7 +242,7 @@ void main() {
     ]);
   });
 
-  group('test list result calculaction', () {
+  group('test list result calculation', () {
     test('insert works in result list', () {
       expect(
           diffutil
@@ -333,6 +333,21 @@ void main() {
         ],
       );
     });
+  });
+
+  test("github issue #21: move detection bug", () {
+    final start = [1, 2, 3, 4, 5, 6];
+    final end = [1, 4, 2, 5, 6, 3];
+
+    final updates = diffutil
+        .calculateListDiff(start, end, detectMoves: true)
+        .getUpdates(batch: false)
+        .toList();
+
+    expect(updates, const [
+      Move(from: 2, to: 5),
+      Move(from: 1, to: 2),
+    ]);
   });
 }
 
