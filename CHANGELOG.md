@@ -1,3 +1,7 @@
+## 4.0.1
+
+- fix endless loopi/wrong result in certain cases (#21, #18)
+
 ## 4.0.0
 
 - Fix bug that caused wrong update list to be returned when the list would contain duplicate items (see https://github.com/knaeckeKami/diffutil.dart/issues/15)

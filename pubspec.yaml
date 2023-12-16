@@ -1,6 +1,6 @@
 name: diffutil_dart
 description: Calculate the difference between two lists as list of edit operations. Used for example for implicitly animating Flutter lists without having to maintain a StatefulWidget.
-version: 4.0.0
+version: 4.0.1
 homepage: https://github.com/knaeckeKami/diffutil.dart
 
 environment:
