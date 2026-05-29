@@ -322,16 +322,36 @@ void main() {
     test(
         "github issue #15 https://github.com/knaeckeKami/diffutil.dart/issues/15",
         () {
+      // With prefix/suffix trimming, the first '0' (pos 1) is matched in the
+      // prefix and '3' (pos 4) in the suffix, leaving positions 2 and 3 as
+      // removals. This is an equally valid minimal edit sequence.
       expect(
         diffutil
             .calculateListDiff([1, 0, 2, 0, 3], [1, 0, 3], detectMoves: false)
             .getUpdates(batch: false)
             .toList(),
         const [
+          Remove(position: 3, count: 1),
           Remove(position: 2, count: 1),
-          Remove(position: 1, count: 1),
         ],
       );
+    });
+  });
+
+  group('interning collisions:', () {
+    test('hash collisions should not be treated as same item', () {
+      final oldList = [const CollisionPair(1, 2)];
+      final newList = [const CollisionPair(2, 1)];
+
+      final updates = diffutil
+          .calculateListDiff(oldList, newList)
+          .getUpdates(batch: true)
+          .toList();
+
+      expect(updates, const [
+        Remove(position: 0, count: 1),
+        Insert(position: 0, count: 1),
+      ]);
     });
   });
 
@@ -404,4 +424,25 @@ class DataObject {
 
   @override
   int get hashCode => id.hashCode ^ payload.hashCode;
+}
+
+class CollisionPair {
+  final int left;
+  final int right;
+
+  const CollisionPair(this.left, this.right);
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is CollisionPair &&
+          runtimeType == other.runtimeType &&
+          left == other.left &&
+          right == other.right;
+
+  @override
+  int get hashCode => left ^ right;
+
+  @override
+  String toString() => 'CollisionPair($left, $right)';
 }
