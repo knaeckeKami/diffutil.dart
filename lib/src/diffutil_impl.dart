@@ -641,21 +641,16 @@ DiffResult<T> calculateListDiff<T>(
   final oldSize = oldList.length;
   final newSize = newList.length;
 
-  final minSize = oldSize < newSize ? oldSize : newSize;
-  int prefix = 0;
-  while (prefix < minSize && delegate.areItemsTheSame(prefix, prefix)) {
-    prefix++;
-  }
   int suffix = 0;
-  final maxSuffix = minSize - prefix;
+  final maxSuffix = oldSize < newSize ? oldSize : newSize;
   while (suffix < maxSuffix &&
       delegate.areItemsTheSame(oldSize - 1 - suffix, newSize - 1 - suffix)) {
     suffix++;
   }
 
-  final trimmedOldStart = prefix;
+  const trimmedOldStart = 0;
   final trimmedOldEnd = oldSize - suffix;
-  final trimmedNewStart = prefix;
+  const trimmedNewStart = 0;
   final trimmedNewEnd = newSize - suffix;
 
   if (_shouldIntern(
@@ -681,7 +676,7 @@ DiffResult<T> calculateListDiff<T>(
       delegate,
       (int x, int y) => oldIds[x] == newIds[y],
       detectMoves,
-      prefix,
+      0,
       suffix,
     );
   }
@@ -689,7 +684,7 @@ DiffResult<T> calculateListDiff<T>(
   return _calculateDiffCorePreTrimmedDelegate<T>(
     delegate,
     detectMoves,
-    prefix,
+    0,
     suffix,
   );
 }
@@ -755,20 +750,14 @@ DiffResult<T> _calculateDiffCoreDelegate<T>(
   final oldSize = cb.getOldListSize();
   final newSize = cb.getNewListSize();
 
-  final minSize = oldSize < newSize ? oldSize : newSize;
-  int prefix = 0;
-  while (prefix < minSize && cb.areItemsTheSame(prefix, prefix)) {
-    prefix++;
-  }
   int suffix = 0;
-  final maxSuffix = minSize - prefix;
+  final maxSuffix = oldSize < newSize ? oldSize : newSize;
   while (suffix < maxSuffix &&
       cb.areItemsTheSame(oldSize - 1 - suffix, newSize - 1 - suffix)) {
     suffix++;
   }
 
-  return _calculateDiffCorePreTrimmedDelegate<T>(
-      cb, detectMoves, prefix, suffix);
+  return _calculateDiffCorePreTrimmedDelegate<T>(cb, detectMoves, 0, suffix);
 }
 
 DiffResult<T> _calculateDiffCorePreTrimmedDelegate<T>(
@@ -798,42 +787,17 @@ DiffResult<T> _calculateDiffCorePreTrimmedDelegate<T>(
 
   final max = (oldSize + newSize + 1) ~/ 2;
   final kLines = _KLineArrays(max * 2 + 1);
-  final stack = <_Range>[];
-  stack.add(_Range(
+  _findMiddleDiagonals(
+    diagonals: diagonals,
+    kLines: kLines,
+    initialRange: _Range(
       oldListStart: trimmedOldStart,
       oldListEnd: trimmedOldEnd,
       newListStart: trimmedNewStart,
-      newListEnd: trimmedNewEnd));
-  final rangePool = <_Range>[];
-
-  while (stack.isNotEmpty) {
-    final range = stack.removeLast();
-    final snake = _midPointDelegate(range, cb, kLines);
-
-    if (snake != null) {
-      if (snake.diagonalSize() > 0) {
-        diagonals.add(snake.toDiagonal());
-      }
-
-      final _Range left = rangePool.isEmpty
-          ? _Range.empty()
-          : rangePool.removeAt(rangePool.length - 1);
-      left.oldListStart = range.oldListStart;
-      left.newListStart = range.newListStart;
-      left.oldListEnd = snake.startX;
-      left.newListEnd = snake.startY;
-      stack.add(left);
-
-      final _Range right = range;
-      right.oldListEnd = range.oldListEnd;
-      right.newListEnd = range.newListEnd;
-      right.oldListStart = snake.endX;
-      right.newListStart = snake.endY;
-      stack.add(right);
-    } else {
-      rangePool.add(range);
-    }
-  }
+      newListEnd: trimmedNewEnd,
+    ),
+    delegate: cb,
+  );
 
   diagonals.sort(_diagonalComparator);
   return DiffResult._(
@@ -872,81 +836,79 @@ DiffResult<T> _calculateDiffCorePreTrimmed<T>(
   final max = (oldSize + newSize + 1) ~/ 2;
   final kLines = _KLineArrays(max * 2 + 1);
 
-  {
-    final stack = <_Range>[];
-    stack.add(_Range(
-        oldListStart: trimmedOldStart,
-        oldListEnd: trimmedOldEnd,
-        newListStart: trimmedNewStart,
-        newListEnd: trimmedNewEnd));
-    final rangePool = <_Range>[];
-
-    while (stack.isNotEmpty) {
-      final range = stack.removeLast();
-
-      // --- Recursive sub-range prefix/suffix trimming ---
-      // After splitting at the middle snake, each sub-range may also share
-      // common elements at its boundaries.  Finding them here avoids pushing
-      // those elements into the O(ND) search.
-      _trimSubRange(range, areEqual, diagonals);
-
-      if (range.oldSize() < 1 || range.newSize() < 1) {
-        rangePool.add(range);
-        continue;
-      }
-
-      final snake = _midPoint(range, areEqual, kLines);
-
-      if (snake != null) {
-        if (snake.diagonalSize() > 0) {
-          diagonals.add(snake.toDiagonal());
-        }
-
-        final _Range left = rangePool.isEmpty
-            ? _Range.empty()
-            : rangePool.removeAt(rangePool.length - 1);
-        left.oldListStart = range.oldListStart;
-        left.newListStart = range.newListStart;
-        left.oldListEnd = snake.startX;
-        left.newListEnd = snake.startY;
-        stack.add(left);
-
-        final _Range right = range;
-        right.oldListEnd = range.oldListEnd;
-        right.newListEnd = range.newListEnd;
-        right.oldListStart = snake.endX;
-        right.newListStart = snake.endY;
-        stack.add(right);
-      } else {
-        rangePool.add(range);
-      }
-    }
-  }
+  _findMiddleDiagonals(
+    diagonals: diagonals,
+    kLines: kLines,
+    initialRange: _Range(
+      oldListStart: trimmedOldStart,
+      oldListEnd: trimmedOldEnd,
+      newListStart: trimmedNewStart,
+      newListEnd: trimmedNewEnd,
+    ),
+    areEqual: areEqual,
+  );
 
   diagonals.sort(_diagonalComparator);
   return DiffResult._(
       cb, diagonals, kLines.forwardData, kLines.backwardData, detectMoves);
 }
 
-/// Trim matching elements at the start and end of [range], adding any
-/// matches found as diagonals.  Mutates [range] in place.
+void _findMiddleDiagonals({
+  required List<_Diagonal> diagonals,
+  required _KLineArrays kLines,
+  required _Range initialRange,
+  DiffDelegate? delegate,
+  bool Function(int, int)? areEqual,
+}) {
+  assert((delegate == null) != (areEqual == null));
+
+  final stack = <_Range>[initialRange];
+  final rangePool = <_Range>[];
+
+  while (stack.isNotEmpty) {
+    final range = stack.removeLast();
+    if (areEqual != null) {
+      _trimSubRange(range, areEqual, diagonals);
+    }
+
+    if (range.oldSize() < 1 || range.newSize() < 1) {
+      rangePool.add(range);
+      continue;
+    }
+
+    final snake = delegate != null
+        ? _midPointDelegate(range, delegate, kLines)
+        : _midPoint(range, areEqual!, kLines);
+    if (snake == null) {
+      rangePool.add(range);
+      continue;
+    }
+
+    if (snake.diagonalSize() > 0) {
+      diagonals.add(snake.toDiagonal());
+    }
+
+    final left = rangePool.isEmpty ? _Range.empty() : rangePool.removeLast();
+    left.oldListStart = range.oldListStart;
+    left.newListStart = range.newListStart;
+    left.oldListEnd = snake.startX;
+    left.newListEnd = snake.startY;
+    stack.add(left);
+
+    final right = range;
+    right.oldListEnd = range.oldListEnd;
+    right.newListEnd = range.newListEnd;
+    right.oldListStart = snake.endX;
+    right.newListStart = snake.endY;
+    stack.add(right);
+  }
+}
+
+/// Trim matching elements at the end of [range], adding any matches found as
+/// diagonals. Mutates [range] in place.
 @pragma("vm:prefer-inline")
 void _trimSubRange(
     _Range range, bool Function(int, int) areEqual, List<_Diagonal> diagonals) {
-  // prefix
-  int subPrefix = 0;
-  final subMinSize = min(range.oldSize(), range.newSize());
-  while (subPrefix < subMinSize &&
-      areEqual(
-          range.oldListStart + subPrefix, range.newListStart + subPrefix)) {
-    subPrefix++;
-  }
-  if (subPrefix > 0) {
-    diagonals.add(_Diagonal(range.oldListStart, range.newListStart, subPrefix));
-    range.oldListStart += subPrefix;
-    range.newListStart += subPrefix;
-  }
-  // suffix
   int subSuffix = 0;
   final subMaxSuffix = min(range.oldSize(), range.newSize());
   while (subSuffix < subMaxSuffix &&
