@@ -1,3 +1,10 @@
+## 5.0.0
+
+- BREAKING: optimize exact diff calculation by trimming matching suffixes before running Myers. This keeps diffs minimal, but duplicate-heavy lists may now choose a different valid anchor/update position than 4.x.
+- Improve common diff performance by reusing typed-data buffers for k-lines/status arrays and interning larger non-aligned list diffs.
+- Add an AOT/JIT benchmark harness under `tool/bench/bench.dart`.
+- Add hash-collision regression tests for both update APIs.
+
 ## 4.0.1
 
 - fix endless loopi/wrong result in certain cases (#21, #18)
