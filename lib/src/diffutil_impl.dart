@@ -1,5 +1,6 @@
 // ignore_for_file: constant_identifier_names
 
+import 'dart:collection';
 import 'dart:math';
 import 'dart:typed_data';
 
@@ -32,18 +33,22 @@ final class _Snake {
       required this.endY,
       required this.reverse});
 
+  @pragma("vm:prefer-inline")
   bool hasAdditionOrRemoval() {
     return endY - startY != endX - startX;
   }
 
+  @pragma("vm:prefer-inline")
   bool isAddition() {
     return endY - startY > endX - startX;
   }
 
+  @pragma("vm:prefer-inline")
   int diagonalSize() {
     return min(endX - startX, endY - startY);
   }
 
+  @pragma("vm:prefer-inline")
   _Diagonal toDiagonal() {
     if (hasAdditionOrRemoval()) {
       if (reverse) {
@@ -109,36 +114,53 @@ final class _Range {
         newListStart = 0,
         newListEnd = 0;
 
+  @pragma("vm:prefer-inline")
   int oldSize() {
     return oldListEnd - oldListStart;
   }
 
+  @pragma("vm:prefer-inline")
   int newSize() {
     return newListEnd - newListStart;
   }
 }
 
-final class _CenteredArray {
-  final Int32List data;
-  final int _mid;
+/// Two centered k-line arrays backed by a single Int32List allocation.
+/// [fwd]/[bwd] share the same backing buffer but address disjoint halves,
+/// saving one typed-array allocation per diff call.
+final class _KLineArrays {
+  final Int32List _data;
+  final int _fwdMid;
+  final int _bwdMid;
+  final int _half;
 
-  _CenteredArray(int size)
-      : _mid = size ~/ 2,
-        data = Int32List(size);
+  _KLineArrays(int kLineSize)
+      : _half = kLineSize,
+        _fwdMid = kLineSize ~/ 2,
+        _bwdMid = kLineSize + kLineSize ~/ 2,
+        _data = Int32List(kLineSize * 2);
 
   @pragma("vm:prefer-inline")
-  int operator [](int index) {
-    return data[_mid + index];
+  int fwd(int index) => _data[_fwdMid + index];
+
+  @pragma("vm:prefer-inline")
+  void setFwd(int index, int value) {
+    _data[_fwdMid + index] = value;
   }
 
   @pragma("vm:prefer-inline")
-  void operator []=(int index, int value) {
-    data[_mid + index] = value;
+  int bwd(int index) => _data[_bwdMid + index];
+
+  @pragma("vm:prefer-inline")
+  void setBwd(int index, int value) {
+    _data[_bwdMid + index] = value;
   }
 
-  void fill(int value) {
-    data.fillRange(0, data.length, value);
-  }
+  /// Return the forward half for reuse as old-item statuses in DiffResult.
+  Int32List get forwardData => Int32List.sublistView(_data, 0, _half);
+
+  /// Return the backward half for reuse as new-item statuses in DiffResult.
+  Int32List get backwardData => Int32List.sublistView(_data, _half);
 }
 
 ///
@@ -212,12 +234,8 @@ class DiffResult<T> {
         _mOldListSize = callback.getOldListSize(),
         _mNewListSize = callback.getNewListSize(),
         _mDetectMoves = detectMoves {
-    if (_mOldItemStatuses.isNotEmpty) {
-      _mOldItemStatuses.fillRange(0, _mOldItemStatuses.length - 1, 0);
-    }
-    if (_mNewItemStatuses.isNotEmpty) {
-      _mNewItemStatuses.fillRange(0, _mNewItemStatuses.length - 1, 0);
-    }
+    _mOldItemStatuses.fillRange(0, _mOldItemStatuses.length, 0);
+    _mNewItemStatuses.fillRange(0, _mNewItemStatuses.length, 0);
     _addEdgeDiagonals();
     _findMatchingItems();
   }
@@ -584,7 +602,7 @@ class _PostponedUpdate {
 }
 
 ///
-/// Calculates the list of update operations that can covert one list into the other one.
+/// Calculates the list of update operations that can convert one list into the other one.
 /// <p>
 /// If your old and new lists are sorted by the same constraint and items never move (swap
 /// positions), you can disable move detection which takes <code>O(N^2)</code> time where
@@ -597,68 +615,14 @@ class _PostponedUpdate {
 /// old list into the new list.
 ///
 DiffResult<T> calculateDiff<T>(DiffDelegate cb, {bool detectMoves = false}) {
-  final oldSize = cb.getOldListSize();
-  final newSize = cb.getNewListSize();
-  final diagonals = <_Diagonal>[];
-  // instead of a recursive implementation, we keep our own stack to avoid potential stack
-  // overflow exceptions
-  final stack = <_Range>[];
-  stack.add(_Range(
-      oldListStart: 0,
-      oldListEnd: oldSize,
-      newListStart: 0,
-      newListEnd: newSize));
-  final max = (oldSize + newSize + 1) ~/ 2;
-  // allocate forward and backward k-lines. K lines are diagonal lines in the matrix. (see the
-  // paper for details)
-  // These arrays lines keep the max reachable position for each k-line.
-  final forward = _CenteredArray(max * 2 + 1);
-  final backward = _CenteredArray(max * 2 + 1);
-  // We pool the ranges to avoid allocations for each recursive call.
-  final rangePool = <_Range>[];
-  while (stack.isNotEmpty) {
-    final range = stack.removeLast();
-    final snake = midPoint(range, cb, forward, backward);
-
-    if (snake != null) {
-      // if it has a diagonal, save it
-      if (snake.diagonalSize() > 0) {
-        diagonals.add(snake.toDiagonal());
-      }
-
-      // add new ranges for left and right
-      final _Range left = rangePool.isEmpty
-          ? _Range.empty()
-          : rangePool.removeAt(rangePool.length - 1);
-      left.oldListStart = range.oldListStart;
-      left.newListStart = range.newListStart;
-      left.oldListEnd = snake.startX;
-      left.newListEnd = snake.startY;
-
-      stack.add(left);
-
-      // re-use range for right
-      //noinspection UnnecessaryLocalVariable
-      final _Range right = range;
-      right.oldListEnd = range.oldListEnd;
-      right.newListEnd = range.newListEnd;
-      right.oldListStart = snake.endX;
-      right.newListStart = snake.endY;
-      stack.add(right);
-    } else {
-      rangePool.add(range);
-    }
-  }
-  diagonals.sort(_diagonalComparator);
-
-  return DiffResult._(cb, diagonals, forward.data, backward.data, detectMoves);
+  return _calculateDiffCoreDelegate<T>(cb, detectMoves);
 }
 
 /// calculate the difference between the two given lists.
 ///
 /// @param oldList the old list
 /// @param newList the new list
-/// @param detectMoves wheter move detection should be enabled
+/// @param detectMoves whether move detection should be enabled
 /// @param equalityChecker use this if you don't want to use the equality as defined by the == operator
 DiffResult<T> calculateListDiff<T>(
   List<T> oldList,
@@ -666,10 +630,99 @@ DiffResult<T> calculateListDiff<T>(
   bool detectMoves = true,
   bool Function(T, T)? equalityChecker,
 }) {
-  return calculateDiff<T>(
-    ListDiffDelegate<T>(oldList, newList, equalityChecker),
-    detectMoves: detectMoves,
+  final delegate = ListDiffDelegate<T>(oldList, newList, equalityChecker);
+
+  // With a custom equality checker we cannot safely intern via HashMap
+  // (whose keys use operator== / hashCode, which may differ from the checker).
+  if (equalityChecker != null) {
+    return calculateDiff<T>(delegate, detectMoves: detectMoves);
+  }
+
+  final oldSize = oldList.length;
+  final newSize = newList.length;
+
+  int suffix = 0;
+  final maxSuffix = oldSize < newSize ? oldSize : newSize;
+  while (suffix < maxSuffix &&
+      delegate.areItemsTheSame(oldSize - 1 - suffix, newSize - 1 - suffix)) {
+    suffix++;
+  }
+
+  const trimmedOldStart = 0;
+  final trimmedOldEnd = oldSize - suffix;
+  const trimmedNewStart = 0;
+  final trimmedNewEnd = newSize - suffix;
+
+  if (_shouldIntern(
+    oldList,
+    newList,
+    trimmedOldStart,
+    trimmedOldEnd,
+    trimmedNewStart,
+    trimmedNewEnd,
+  )) {
+    final interner = HashMap<T, int>();
+    int nextId = 1;
+    final oldIds = Int32List(oldSize);
+    final newIds = Int32List(newSize);
+    for (int i = trimmedOldStart; i < trimmedOldEnd; i++) {
+      oldIds[i] = interner.putIfAbsent(oldList[i], () => nextId++);
+    }
+    for (int i = trimmedNewStart; i < trimmedNewEnd; i++) {
+      newIds[i] = interner.putIfAbsent(newList[i], () => nextId++);
+    }
+
+    return _calculateDiffCorePreTrimmed<T>(
+      delegate,
+      (int x, int y) => oldIds[x] == newIds[y],
+      detectMoves,
+      0,
+      suffix,
+    );
+  }
+
+  return _calculateDiffCorePreTrimmedDelegate<T>(
+    delegate,
+    detectMoves,
+    0,
+    suffix,
   );
+}
+
+bool _shouldIntern<T>(
+  List<T> oldList,
+  List<T> newList,
+  int oldStart,
+  int oldEnd,
+  int newStart,
+  int newEnd,
+) {
+  final oldLength = oldEnd - oldStart;
+  final newLength = newEnd - newStart;
+  if (oldLength <= 0 || newLength <= 0) {
+    return false;
+  }
+
+  final totalLength = oldLength + newLength;
+  if (totalLength < 512) {
+    return false;
+  }
+
+  // If the remaining middle is still mostly equal at the same offsets, Myers
+  // will usually find long snakes cheaply. Interning would add a full HashMap
+  // pass to a workload that is already close to linear.
+  final sampleLength = oldLength < newLength ? oldLength : newLength;
+  final step = max(1, sampleLength ~/ 64);
+  var sampled = 0;
+  var alignedMatches = 0;
+  for (var offset = 0; offset < sampleLength && sampled < 64; offset += step) {
+    sampled++;
+    if (oldList[oldStart + offset] == newList[newStart + offset]) {
+      alignedMatches++;
+    }
+  }
+
+  return sampled == 0 || alignedMatches * 4 < sampled * 3;
 }
 
 /// you can use this function if you want to use custom list-types, such as BuiltList
@@ -688,6 +741,187 @@ DiffResult<T> calculateCustomListDiff<T, L>(L oldList, L newList,
         getByIndex: getByIndex,
       ),
       detectMoves: detectMoves);
+}
+
+DiffResult<T> _calculateDiffCoreDelegate<T>(
+  DiffDelegate cb,
+  bool detectMoves,
+) {
+  final oldSize = cb.getOldListSize();
+  final newSize = cb.getNewListSize();
+
+  int suffix = 0;
+  final maxSuffix = oldSize < newSize ? oldSize : newSize;
+  while (suffix < maxSuffix &&
+      cb.areItemsTheSame(oldSize - 1 - suffix, newSize - 1 - suffix)) {
+    suffix++;
+  }
+
+  return _calculateDiffCorePreTrimmedDelegate<T>(cb, detectMoves, 0, suffix);
+}
+
+DiffResult<T> _calculateDiffCorePreTrimmedDelegate<T>(
+  DiffDelegate cb,
+  bool detectMoves,
+  int prefix,
+  int suffix,
+) {
+  final oldSize = cb.getOldListSize();
+  final newSize = cb.getNewListSize();
+
+  final diagonals = <_Diagonal>[];
+  if (prefix > 0) diagonals.add(_Diagonal(0, 0, prefix));
+  if (suffix > 0) {
+    diagonals.add(_Diagonal(oldSize - suffix, newSize - suffix, suffix));
+  }
+
+  final trimmedOldStart = prefix;
+  final trimmedOldEnd = oldSize - suffix;
+  final trimmedNewStart = prefix;
+  final trimmedNewEnd = newSize - suffix;
+
+  if (trimmedOldEnd <= trimmedOldStart || trimmedNewEnd <= trimmedNewStart) {
+    return DiffResult._(
+        cb, diagonals, Int32List(oldSize), Int32List(newSize), detectMoves);
+  }
+
+  final max = (oldSize + newSize + 1) ~/ 2;
+  final kLines = _KLineArrays(max * 2 + 1);
+  _findMiddleDiagonals(
+    diagonals: diagonals,
+    kLines: kLines,
+    initialRange: _Range(
+      oldListStart: trimmedOldStart,
+      oldListEnd: trimmedOldEnd,
+      newListStart: trimmedNewStart,
+      newListEnd: trimmedNewEnd,
+    ),
+    delegate: cb,
+  );
+
+  diagonals.sort(_diagonalComparator);
+  return DiffResult._(
+      cb, diagonals, kLines.forwardData, kLines.backwardData, detectMoves);
+}
+
+/// Inner algorithm after prefix/suffix lengths are already known.
+/// Used by the interned path where the hot comparison is an integer ID check.
+DiffResult<T> _calculateDiffCorePreTrimmed<T>(
+  DiffDelegate cb,
+  bool Function(int, int) areEqual,
+  bool detectMoves,
+  int prefix,
+  int suffix,
+) {
+  final oldSize = cb.getOldListSize();
+  final newSize = cb.getNewListSize();
+
+  final diagonals = <_Diagonal>[];
+  if (prefix > 0) diagonals.add(_Diagonal(0, 0, prefix));
+  if (suffix > 0) {
+    diagonals.add(_Diagonal(oldSize - suffix, newSize - suffix, suffix));
+  }
+
+  final trimmedOldStart = prefix;
+  final trimmedOldEnd = oldSize - suffix;
+  final trimmedNewStart = prefix;
+  final trimmedNewEnd = newSize - suffix;
+
+  // Early return for trivial cases — avoid allocating large k-line arrays.
+  if (trimmedOldEnd <= trimmedOldStart || trimmedNewEnd <= trimmedNewStart) {
+    return DiffResult._(
+        cb, diagonals, Int32List(oldSize), Int32List(newSize), detectMoves);
+  }
+
+  final max = (oldSize + newSize + 1) ~/ 2;
+  final kLines = _KLineArrays(max * 2 + 1);
+
+  _findMiddleDiagonals(
+    diagonals: diagonals,
+    kLines: kLines,
+    initialRange: _Range(
+      oldListStart: trimmedOldStart,
+      oldListEnd: trimmedOldEnd,
+      newListStart: trimmedNewStart,
+      newListEnd: trimmedNewEnd,
+    ),
+    areEqual: areEqual,
+  );
+
+  diagonals.sort(_diagonalComparator);
+  return DiffResult._(
+      cb, diagonals, kLines.forwardData, kLines.backwardData, detectMoves);
+}
+
+void _findMiddleDiagonals({
+  required List<_Diagonal> diagonals,
+  required _KLineArrays kLines,
+  required _Range initialRange,
+  DiffDelegate? delegate,
+  bool Function(int, int)? areEqual,
+}) {
+  assert((delegate == null) != (areEqual == null));
+
+  final stack = <_Range>[initialRange];
+  final rangePool = <_Range>[];
+
+  while (stack.isNotEmpty) {
+    final range = stack.removeLast();
+    if (areEqual != null) {
+      _trimSubRange(range, areEqual, diagonals);
+    }
+
+    if (range.oldSize() < 1 || range.newSize() < 1) {
+      rangePool.add(range);
+      continue;
+    }
+
+    final snake = delegate != null
+        ? _midPointDelegate(range, delegate, kLines)
+        : _midPoint(range, areEqual!, kLines);
+    if (snake == null) {
+      rangePool.add(range);
+      continue;
+    }
+
+    if (snake.diagonalSize() > 0) {
+      diagonals.add(snake.toDiagonal());
+    }
+
+    final left = rangePool.isEmpty ? _Range.empty() : rangePool.removeLast();
+    left.oldListStart = range.oldListStart;
+    left.newListStart = range.newListStart;
+    left.oldListEnd = snake.startX;
+    left.newListEnd = snake.startY;
+    stack.add(left);
+
+    final right = range;
+    right.oldListEnd = range.oldListEnd;
+    right.newListEnd = range.newListEnd;
+    right.oldListStart = snake.endX;
+    right.newListStart = snake.endY;
+    stack.add(right);
+  }
+}
+
+/// Trim matching elements at the end of [range], adding any matches found as
+/// diagonals. Mutates [range] in place.
+@pragma("vm:prefer-inline")
+void _trimSubRange(
+    _Range range, bool Function(int, int) areEqual, List<_Diagonal> diagonals) {
+  int subSuffix = 0;
+  final subMaxSuffix = min(range.oldSize(), range.newSize());
+  while (subSuffix < subMaxSuffix &&
+      areEqual(
+          range.oldListEnd - 1 - subSuffix, range.newListEnd - 1 - subSuffix)) {
+    subSuffix++;
+  }
+  if (subSuffix > 0) {
+    diagonals.add(_Diagonal(
+        range.oldListEnd - subSuffix, range.newListEnd - subSuffix, subSuffix));
+    range.oldListEnd -= subSuffix;
+    range.newListEnd -= subSuffix;
+  }
 }
 
 extension _Batch on Iterable<DiffUpdate> {
@@ -731,20 +965,20 @@ extension _Batch on Iterable<DiffUpdate> {
   }
 }
 
-_Snake? midPoint(_Range range, DiffDelegate cb, _CenteredArray forward,
-    _CenteredArray backward) {
+@pragma("vm:prefer-inline")
+_Snake? _midPointDelegate(_Range range, DiffDelegate cb, _KLineArrays kLines) {
   if (range.oldSize() < 1 || range.newSize() < 1) {
     return null;
   }
   final max = (range.oldSize() + range.newSize() + 1) ~/ 2;
-  forward[1] = range.oldListStart;
-  backward[1] = range.oldListEnd;
+  kLines.setFwd(1, range.oldListStart);
+  kLines.setBwd(1, range.oldListEnd);
   for (int d = 0; d < max; d++) {
-    _Snake? snake = forwardSnake(range, cb, forward, backward, d);
+    _Snake? snake = _forwardSnakeDelegate(range, cb, kLines, d);
     if (snake != null) {
       return snake;
     }
-    snake = backwardSnake(range, cb, forward, backward, d);
+    snake = _backwardSnakeDelegate(range, cb, kLines, d);
     if (snake != null) {
       return snake;
     }
@@ -752,103 +986,174 @@ _Snake? midPoint(_Range range, DiffDelegate cb, _CenteredArray forward,
   return null;
 }
 
-_Snake? forwardSnake(_Range range, DiffDelegate cb, _CenteredArray forward,
-    _CenteredArray backward, int d) {
-  final bool checkForSnake = (range.oldSize() - range.newSize()).abs() % 2 == 1;
+@pragma("vm:prefer-inline")
+_Snake? _forwardSnakeDelegate(
+    _Range range, DiffDelegate cb, _KLineArrays kLines, int d) {
+  final bool checkForSnake = ((range.oldSize() ^ range.newSize()) & 1) == 1;
   final delta = range.oldSize() - range.newSize();
+  final oldEnd = range.oldListEnd;
+  final newEnd = range.newListEnd;
+  final oldStart = range.oldListStart;
+  final newStart = range.newListStart;
   for (int k = -d; k <= d; k += 2) {
-    // we either come from d-1, k-1 OR d-1. k+1
-    // as we move in steps of 2, array always holds both current and previous d values
-    // k = x - y and each array value holds the max X, y = x - k
     final int startX;
     final int startY;
     int x, y;
-    if (k == -d || (k != d && forward[k + 1] > forward[k - 1])) {
-      // picking k + 1, incrementing Y (by simply not incrementing X)
-      x = startX = forward[k + 1];
+    if (k == -d || (k != d && kLines.fwd(k + 1) > kLines.fwd(k - 1))) {
+      x = startX = kLines.fwd(k + 1);
     } else {
-      // picking k - 1, incrementing X
-      startX = forward[k - 1];
+      startX = kLines.fwd(k - 1);
       x = startX + 1;
     }
-    y = range.newListStart + (x - range.oldListStart) - k;
+    y = newStart + (x - oldStart) - k;
     startY = (d == 0 || x != startX) ? y : y - 1;
-    // now find snake size
-    while (x < range.oldListEnd &&
-        y < range.newListEnd &&
-        cb.areItemsTheSame(x, y)) {
+    while (x < oldEnd && y < newEnd && cb.areItemsTheSame(x, y)) {
       x++;
       y++;
     }
-    // now we have furthest reaching x, record it
-    forward[k] = x;
+    kLines.setFwd(k, x);
     if (checkForSnake) {
-      // see if we did pass over a backwards array
-      // mapping function: delta - k
       final backwardsK = delta - k;
-      // if backwards K is calculated and it passed me, found match
       if (backwardsK >= -d + 1 &&
           backwardsK <= d - 1 &&
-          backward[(backwardsK)] <= x) {
-        // match
-        final snake = _Snake(
+          kLines.bwd(backwardsK) <= x) {
+        return _Snake(
             startX: startX, startY: startY, endX: x, endY: y, reverse: false);
-        return snake;
       }
     }
   }
   return null;
 }
 
-_Snake? backwardSnake(_Range range, DiffDelegate cb, _CenteredArray forward,
-    _CenteredArray backward, int d) {
-  final checkForSnake = (range.oldSize() - range.newSize()) % 2 == 0;
+@pragma("vm:prefer-inline")
+_Snake? _backwardSnakeDelegate(
+    _Range range, DiffDelegate cb, _KLineArrays kLines, int d) {
+  final checkForSnake = ((range.oldSize() ^ range.newSize()) & 1) == 0;
   final delta = range.oldSize() - range.newSize();
-  // same as forward but we go backwards from end of the lists to be beginning
-  // this also means we'll try to optimize for minimizing x instead of maximizing it
+  final oldStart = range.oldListStart;
+  final newStart = range.newListStart;
+  final oldEnd = range.oldListEnd;
+  final newEnd = range.newListEnd;
   for (int k = -d; k <= d; k += 2) {
-    // we either come from d-1, k-1 OR d-1, k+1
-    // as we move in steps of 2, array always holds both current and previous d values
-    // k = x - y and each array value holds the MIN X, y = x - k
-    // when x's are equal, we prioritize deletion over insertion
     final int startX;
     final int startY;
     int x, y;
-
-    if (k == -d || (k != d && backward[(k + 1)] < backward[(k - 1)])) {
-      // picking k + 1, decrementing Y (by simply not decrementing X)
-      x = startX = backward[(k + 1)];
+    if (k == -d || (k != d && kLines.bwd(k + 1) < kLines.bwd(k - 1))) {
+      x = startX = kLines.bwd(k + 1);
     } else {
-      // picking k - 1, decrementing X
-      startX = backward[(k - 1)];
+      startX = kLines.bwd(k - 1);
       x = startX - 1;
     }
-    y = range.newListEnd - ((range.oldListEnd - x) - k);
+    y = newEnd - ((oldEnd - x) - k);
     startY = (d == 0 || x != startX) ? y : y + 1;
-    // now find snake size
-    while (x > range.oldListStart &&
-        y > range.newListStart &&
-        cb.areItemsTheSame(x - 1, y - 1)) {
+    while (x > oldStart && y > newStart && cb.areItemsTheSame(x - 1, y - 1)) {
       x--;
       y--;
     }
-    // now we have furthest point, record it (min X)
-    backward[k] = x;
+    kLines.setBwd(k, x);
     if (checkForSnake) {
-      // see if we did pass over a backwards array
-      // mapping function: delta - k
       final forwardsK = delta - k;
-      // if forwards K is calculated and it passed me, found match
-      if (forwardsK >= -d && forwardsK <= d && forward[(forwardsK)] >= x) {
-        // match
-        final snake = _Snake(
-            // assignment are reverse since we are a reverse snake
-            startX: x,
-            startY: y,
-            endX: startX,
-            endY: startY,
-            reverse: true);
-        return snake;
+      if (forwardsK >= -d && forwardsK <= d && kLines.fwd(forwardsK) >= x) {
+        return _Snake(
+            startX: x, startY: y, endX: startX, endY: startY, reverse: true);
+      }
+    }
+  }
+  return null;
+}
+
+@pragma("vm:prefer-inline")
+_Snake? _midPoint(
+    _Range range, bool Function(int, int) areEqual, _KLineArrays kLines) {
+  if (range.oldSize() < 1 || range.newSize() < 1) {
+    return null;
+  }
+  final max = (range.oldSize() + range.newSize() + 1) ~/ 2;
+  kLines.setFwd(1, range.oldListStart);
+  kLines.setBwd(1, range.oldListEnd);
+  for (int d = 0; d < max; d++) {
+    _Snake? snake = _forwardSnake(range, areEqual, kLines, d);
+    if (snake != null) {
+      return snake;
+    }
+    snake = _backwardSnake(range, areEqual, kLines, d);
+    if (snake != null) {
+      return snake;
+    }
+  }
+  return null;
+}
+
+@pragma("vm:prefer-inline")
+_Snake? _forwardSnake(_Range range, bool Function(int, int) areEqual,
+    _KLineArrays kLines, int d) {
+  final bool checkForSnake = ((range.oldSize() ^ range.newSize()) & 1) == 1;
+  final delta = range.oldSize() - range.newSize();
+  final oldEnd = range.oldListEnd;
+  final newEnd = range.newListEnd;
+  final oldStart = range.oldListStart;
+  final newStart = range.newListStart;
+  for (int k = -d; k <= d; k += 2) {
+    final int startX;
+    final int startY;
+    int x, y;
+    if (k == -d || (k != d && kLines.fwd(k + 1) > kLines.fwd(k - 1))) {
+      x = startX = kLines.fwd(k + 1);
+    } else {
+      startX = kLines.fwd(k - 1);
+      x = startX + 1;
+    }
+    y = newStart + (x - oldStart) - k;
+    startY = (d == 0 || x != startX) ? y : y - 1;
+    while (x < oldEnd && y < newEnd && areEqual(x, y)) {
+      x++;
+      y++;
+    }
+    kLines.setFwd(k, x);
+    if (checkForSnake) {
+      final backwardsK = delta - k;
+      if (backwardsK >= -d + 1 &&
+          backwardsK <= d - 1 &&
+          kLines.bwd(backwardsK) <= x) {
+        return _Snake(
+            startX: startX, startY: startY, endX: x, endY: y, reverse: false);
+      }
+    }
+  }
+  return null;
+}
+
+@pragma("vm:prefer-inline")
+_Snake? _backwardSnake(_Range range, bool Function(int, int) areEqual,
+    _KLineArrays kLines, int d) {
+  final checkForSnake = ((range.oldSize() ^ range.newSize()) & 1) == 0;
+  final delta = range.oldSize() - range.newSize();
+  final oldStart = range.oldListStart;
+  final newStart = range.newListStart;
+  final oldEnd = range.oldListEnd;
+  final newEnd = range.newListEnd;
+  for (int k = -d; k <= d; k += 2) {
+    final int startX;
+    final int startY;
+    int x, y;
+    if (k == -d || (k != d && kLines.bwd(k + 1) < kLines.bwd(k - 1))) {
+      x = startX = kLines.bwd(k + 1);
+    } else {
+      startX = kLines.bwd(k - 1);
+      x = startX - 1;
+    }
+    y = newEnd - ((oldEnd - x) - k);
+    startY = (d == 0 || x != startX) ? y : y + 1;
+    while (x > oldStart && y > newStart && areEqual(x - 1, y - 1)) {
+      x--;
+      y--;
+    }
+    kLines.setBwd(k, x);
+    if (checkForSnake) {
+      final forwardsK = delta - k;
+      if (forwardsK >= -d && forwardsK <= d && kLines.fwd(forwardsK) >= x) {
+        return _Snake(
+            startX: x, startY: y, endX: startX, endY: startY, reverse: true);
       }
     }
   }

@@ -335,6 +335,23 @@ void main() {
     });
   });
 
+  group('interning collisions:', () {
+    test('hash collisions should not be treated as same item', () {
+      final oldList = [const CollisionPair(1, 2)];
+      final newList = [const CollisionPair(2, 1)];
+
+      final updates = diffutil
+          .calculateListDiff(oldList, newList)
+          .getUpdates(batch: true)
+          .toList();
+
+      expect(updates, const [
+        Remove(position: 0, count: 1),
+        Insert(position: 0, count: 1),
+      ]);
+    });
+  });
+
   test("github issue #21: move detection bug", () {
     final start = [1, 2, 3, 4, 5, 6];
     final end = [1, 4, 2, 5, 6, 3];
@@ -404,4 +421,25 @@ class DataObject {
 
   @override
   int get hashCode => id.hashCode ^ payload.hashCode;
+}
+
+class CollisionPair {
+  final int left;
+  final int right;
+
+  const CollisionPair(this.left, this.right);
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is CollisionPair &&
+          runtimeType == other.runtimeType &&
+          left == other.left &&
+          right == other.right;
+
+  @override
+  int get hashCode => left ^ right;
+
+  @override
+  String toString() => 'CollisionPair($left, $right)';
 }
